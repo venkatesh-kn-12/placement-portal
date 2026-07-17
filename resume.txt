@@ -1,0 +1,24 @@
+=========================================
+JOHN DOE
+Phone: +91 9876543210 | Email: student@portal.com
+Address: Bangalore, Karnataka
+=========================================
+
+EDUCATION
+-----------------------------------------
+Post Graduate: MCA (YOP: 2026)
+Semester CGPAs: Sem 1: 8.5, Sem 2: 9.0
+
+Undergraduate: BCA (YOP: 2024)
+CGPA: 8.2
+
+TECHNICAL SKILLS
+-----------------------------------------
+Java, Python, Javascript, CSS, HTML
+
+PROJECTS
+-----------------------------------------
+* E-commerce Platform
+  Description: Built a robust full-stack online shopping web application using Java and React.
+  Git Link: https://github.com/johndoe/ecommerce
+  Hosted Link: https://ecommerce.johndoe.com

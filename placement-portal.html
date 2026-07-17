@@ -1,0 +1,2956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PlaceTrack — Placement Readiness Portal</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --brand:#4F46E5;--brand-dark:#3730A3;--brand-light:#EEF2FF;--brand-mid:#6366F1;
+  --accent:#10B981;--accent-light:#D1FAE5;
+  --warn:#F59E0B;--warn-light:#FEF3C7;
+  --danger:#EF4444;--danger-light:#FEE2E2;
+  --info:#3B82F6;--info-light:#DBEAFE;
+  --surface:#FFFFFF;--surface2:#F8FAFC;--surface3:#F1F5F9;
+  --border:#E2E8F0;--border2:#CBD5E1;
+  --text:#0F172A;--text2:#475569;--text3:#94A3B8;
+  --radius:12px;--radius-sm:8px;--radius-lg:16px;--radius-xl:24px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -1px rgba(0,0,0,.06);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);
+  --sidebar:260px;
+}
+/* ── DARK MODE ── */
+body.dark{
+  --brand:#818CF8;--brand-dark:#6366F1;--brand-light:#1e1b4b;--brand-mid:#A5B4FC;
+  --accent:#34D399;--accent-light:#064e3b;
+  --warn:#FBBF24;--warn-light:#451a03;
+  --danger:#F87171;--danger-light:#450a0a;
+  --info:#60A5FA;--info-light:#1e3a5f;
+  --surface:#1E1E2E;--surface2:#16161e;--surface3:#2a2a3e;
+  --border:#2e2e45;--border2:#3f3f5a;
+  --text:#E2E8F0;--text2:#94A3B8;--text3:#64748B;
+  --shadow:0 1px 3px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.5),0 2px 4px -1px rgba(0,0,0,.3);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.5),0 4px 6px -2px rgba(0,0,0,.3);
+}
+body.dark .auth-wrap{background:linear-gradient(135deg,#0f0e1a 0%,#1a1830 40%,#2d2a6e 100%)}
+body.dark .auth-right{background:#1E1E2E;color:var(--text)}
+body.dark .form-input,body.dark .form-select{background:var(--surface3);color:var(--text);border-color:var(--border2)}
+body.dark .option{border-color:var(--border2)}
+body.dark .option:hover{background:var(--brand-light)}
+body.dark .data-table th{background:var(--surface3)}
+body.dark .quiz-wrap .question-card{background:var(--surface)}
+body.dark .auth-captcha-wrap{background:var(--surface3);border-color:var(--border2)}
+body.dark .captcha-input{background:var(--surface);color:var(--text);border-color:var(--border2)}
+
+/* ── DARK MODE TOGGLE BUTTON ── */
+.dark-toggle{width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;position:relative;transition:background .25s;flex-shrink:0}
+.dark-toggle.off{background:#CBD5E1}
+.dark-toggle.on{background:var(--brand)}
+.dark-toggle-thumb{position:absolute;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .25s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.dark-toggle.off .dark-toggle-thumb{left:3px}
+.dark-toggle.on .dark-toggle-thumb{left:21px}
+
+/* ── MOBILE SIDEBAR OVERLAY ── */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;backdrop-filter:blur(2px)}
+.hamburger{display:none;width:36px;height:36px;background:var(--surface3);border-radius:9px;align-items:center;justify-content:center;font-size:18px;cursor:pointer;border:none;color:var(--text2);flex-shrink:0}
+
+/* ── COMPANY MATCH ── */
+.company-match-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;transition:all .2s;cursor:default}
+.company-match-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.match-bar{height:8px;border-radius:4px;background:var(--surface3);overflow:hidden;margin:.5rem 0}
+.match-fill{height:100%;border-radius:4px;transition:width .8s ease}
+.match-tag{display:inline-block;padding:.18rem .5rem;border-radius:6px;font-size:.7rem;font-weight:600;margin:.15rem;background:var(--surface3);color:var(--text2)}
+
+/* ── PDF / REPORT EXPORT ── */
+.report-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1rem}
+@media print{
+  .sidebar,.topbar,.no-print{display:none!important}
+  .main-content{margin-left:0!important}
+  .page-content{padding:0!important}
+  body{background:#fff!important;color:#000!important}
+}
+
+/* ── QUESTION BANK EDITOR ── */
+.qb-row{display:flex;gap:8px;align-items:flex-start;padding:.875rem;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:.6rem}
+.qb-num{width:28px;height:28px;background:var(--brand);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;flex-shrink:0;margin-top:2px}
+.qb-body{flex:1}
+.qb-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.qb-opt-wrap{display:flex;gap:6px;align-items:center}
+.qb-opt-letter{width:22px;height:22px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--text2);flex-shrink:0}
+.qb-opt-correct{background:var(--accent)!important;color:#fff!important}
+.correct-btn{padding:.2rem .5rem;font-size:.7rem;border-radius:5px;background:var(--surface3);color:var(--text3);border:none;cursor:pointer}
+.correct-btn.selected{background:var(--accent-light);color:#065f46;font-weight:700}
+
+body{font-family:'Inter',sans-serif;background:var(--surface2);color:var(--text);line-height:1.6;min-height:100vh;transition:background .25s,color .25s}
+h1,h2,h3,h4,h5{font-family:'Space Grotesk',sans-serif;line-height:1.3}
+button{cursor:pointer;border:none;font-family:'Inter',sans-serif}
+input,select,textarea{font-family:'Inter',sans-serif}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* AUTH */
+.auth-wrap{min-height:100vh;display:flex;background:linear-gradient(135deg,#1e1b4b 0%,#312e81 40%,#4338ca 100%)}
+.auth-left{flex:1;display:flex;align-items:center;justify-content:center;padding:3rem;color:#fff}
+.auth-left-inner{max-width:480px}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:2.5rem}
+.auth-logo-icon{width:48px;height:48px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.auth-logo-name{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.5px}
+.auth-headline{font-size:2.6rem;font-weight:700;line-height:1.15;margin-bottom:1rem}
+.auth-headline span{color:#a5b4fc}
+.auth-sub{font-size:1.05rem;opacity:.75;margin-bottom:2.5rem;line-height:1.7}
+.auth-features{display:flex;flex-direction:column;gap:14px}
+.auth-feat{display:flex;align-items:center;gap:12px;font-size:.9rem;opacity:.85}
+.auth-feat-dot{width:8px;height:8px;border-radius:50%;background:#a5b4fc;flex-shrink:0}
+.auth-right{width:440px;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:3rem}
+.auth-tabs{display:flex;gap:4px;background:#f1f5f9;border-radius:10px;padding:4px;margin-bottom:2rem}
+.auth-tab{flex:1;padding:.55rem;border-radius:8px;background:transparent;font-size:.875rem;font-weight:500;color:var(--text2);transition:all .2s}
+.auth-tab.active{background:#fff;color:var(--brand);box-shadow:var(--shadow)}
+.auth-title{font-size:1.5rem;font-weight:700;margin-bottom:.35rem}
+.auth-desc{font-size:.875rem;color:var(--text2);margin-bottom:1.75rem}
+.form-group{margin-bottom:1.1rem}
+.form-label{display:block;font-size:.8rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.45rem}
+.form-input{width:100%;padding:.7rem 1rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem;transition:border-color .2s,box-shadow .2s;background:#fff}
+.form-input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(79,70,229,.15)}
+.form-select{width:100%;padding:.7rem 1rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.9rem;background:#fff;appearance:none}
+.btn-primary{width:100%;padding:.75rem;background:var(--brand);color:#fff;border-radius:var(--radius-sm);font-size:.9rem;font-weight:600;transition:all .2s;letter-spacing:.2px}
+.btn-primary:hover{background:var(--brand-dark);transform:translateY(-1px);box-shadow:0 4px 12px rgba(79,70,229,.35)}
+.btn-primary:active{transform:translateY(0)}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:1.2rem 0;color:var(--text3);font-size:.8rem}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-demo{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:1.2rem}
+.demo-btn{padding:.55rem;background:var(--surface3);border-radius:8px;font-size:.75rem;font-weight:500;color:var(--text2);transition:all .2s;text-align:center}
+.demo-btn:hover{background:var(--brand-light);color:var(--brand)}
+.auth-captcha-wrap{background:var(--surface3);border-radius:var(--radius-sm);padding:1rem;border:1.5px solid var(--border);margin-bottom:1.1rem;display:flex;align-items:center;justify-content:space-between}
+.captcha-q{font-size:.95rem;font-weight:600;color:var(--text)}
+.captcha-input{width:80px;padding:.5rem .75rem;border:1.5px solid var(--border);border-radius:6px;font-size:.9rem;text-align:center}
+.captcha-refresh{width:32px;height:32px;background:var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer}
+
+/* APP SHELL */
+.app-shell{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar);background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .3s}
+.sidebar-logo{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-logo-icon{width:36px;height:36px;background:var(--brand);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0}
+.sidebar-logo-text{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;color:var(--brand)}
+.sidebar-user{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.user-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#fff;flex-shrink:0}
+.user-name{font-size:.85rem;font-weight:600;color:var(--text)}
+.user-role{font-size:.75rem;color:var(--text3);text-transform:capitalize}
+.sidebar-nav{flex:1;overflow-y:auto;padding:1rem 0}
+.nav-section{padding:.25rem 1.5rem .5rem;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.65rem 1.5rem;font-size:.875rem;font-weight:500;color:var(--text2);border-radius:0;transition:all .15s;cursor:pointer;border-left:3px solid transparent;position:relative}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--brand-light);color:var(--brand);border-left-color:var(--brand)}
+.nav-item .nav-icon{font-size:18px;width:20px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:10px}
+.sidebar-bottom{padding:1rem 1.5rem;border-top:1px solid var(--border)}
+.logout-btn{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--text2);padding:.5rem .75rem;border-radius:var(--radius-sm);background:transparent;width:100%;transition:all .15s}
+.logout-btn:hover{background:var(--danger-light);color:var(--danger)}
+.main-content{margin-left:var(--sidebar);flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:.875rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:1.1rem;font-weight:700;color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.notif-btn{width:36px;height:36px;background:var(--surface3);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text2);position:relative;cursor:pointer;transition:all .15s}
+.notif-btn:hover{background:var(--brand-light);color:var(--brand)}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--danger);border-radius:50%;border:1.5px solid #fff}
+.page-content{flex:1;padding:2rem;overflow-y:auto}
+
+/* CARDS & STATS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:#fff;border-radius:var(--radius-lg);padding:1.25rem 1.5rem;border:1px solid var(--border);display:flex;align-items:center;gap:1rem;transition:all .2s}
+.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.stat-icon{width:48px;height:48px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.stat-body{}
+.stat-label{font-size:.75rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.stat-value{font-size:1.6rem;font-weight:700;color:var(--text);line-height:1}
+.stat-change{font-size:.75rem;margin-top:2px}
+.stat-change.up{color:var(--accent)}
+.stat-change.down{color:var(--danger)}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.section-title{font-size:1.1rem;font-weight:700;color:var(--text)}
+.section-sub{font-size:.8rem;color:var(--text3);margin-top:2px}
+.btn-sm{padding:.4rem .9rem;border-radius:var(--radius-sm);font-size:.8rem;font-weight:600;transition:all .2s}
+.btn-outline{background:transparent;border:1.5px solid var(--border2);color:var(--text2)}
+.btn-outline:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-light)}
+.btn-brand{background:var(--brand);color:#fff;border:none}
+.btn-brand:hover{background:var(--brand-dark)}
+.btn-success{background:var(--accent);color:#fff;border:none}
+.btn-success:hover{background:#059669}
+.btn-warn{background:var(--warn);color:#fff;border:none}
+.btn-danger-outline{background:transparent;border:1.5px solid var(--danger);color:var(--danger)}
+.btn-danger-outline:hover{background:var(--danger-light)}
+
+/* TABLE */
+.table-wrap{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--border);overflow:hidden}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{padding:.8rem 1.25rem;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);border-bottom:1px solid var(--border);background:var(--surface2);text-align:left}
+.data-table td{padding:.9rem 1.25rem;font-size:.875rem;color:var(--text);border-bottom:1px solid var(--border)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--surface2)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:.2rem .6rem;border-radius:20px;font-size:.72rem;font-weight:600;white-space:nowrap}
+.badge-success{background:var(--accent-light);color:#065f46}
+.badge-warn{background:var(--warn-light);color:#92400e}
+.badge-danger{background:var(--danger-light);color:#991b1b}
+.badge-info{background:var(--info-light);color:#1e40af}
+.badge-neutral{background:var(--surface3);color:var(--text2)}
+.badge-brand{background:var(--brand-light);color:var(--brand)}
+
+/* CARDS */
+.card{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.5rem}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.card-title{font-size:1rem;font-weight:700;color:var(--text)}
+.card-sub{font-size:.8rem;color:var(--text3);margin-top:2px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem}
+
+/* PROGRESS */
+.progress-bar{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;flex:1}
+.progress-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.skill-row{display:flex;align-items:center;gap:12px;margin-bottom:.75rem}
+.skill-name{font-size:.8rem;font-weight:500;color:var(--text2);width:100px;flex-shrink:0}
+.skill-score{font-size:.8rem;font-weight:700;width:36px;text-align:right;flex-shrink:0}
+
+/* RATING STARS */
+.stars{display:flex;gap:3px}
+.star{font-size:16px;cursor:pointer;transition:color .15s}
+.star.filled{color:#F59E0B}
+.star.empty{color:var(--border2)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+.modal{background:#fff;border-radius:var(--radius-xl);padding:2rem;max-width:580px;width:100%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:var(--shadow-lg)}
+.modal-title{font-size:1.25rem;font-weight:700;margin-bottom:.5rem}
+.modal-sub{font-size:.875rem;color:var(--text2);margin-bottom:1.5rem}
+.modal-close{position:absolute;top:1.25rem;right:1.25rem;width:32px;height:32px;background:var(--surface3);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--text2)}
+.modal-close:hover{background:var(--danger-light);color:var(--danger)}
+.modal-footer{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+
+/* QUIZ / APTITUDE */
+.quiz-wrap{max-width:680px;margin:0 auto}
+.quiz-header{background:var(--brand);color:#fff;border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem}
+.quiz-meta{display:flex;gap:2rem;margin-top:.75rem}
+.quiz-meta-item{font-size:.85rem;opacity:.85}
+.question-card{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.5rem;margin-bottom:1rem}
+.question-num{font-size:.8rem;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem}
+.question-text{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:1.25rem;line-height:1.5}
+.option{display:flex;align-items:flex-start;gap:12px;padding:.75rem 1rem;border-radius:var(--radius-sm);border:1.5px solid var(--border);margin-bottom:.6rem;cursor:pointer;transition:all .2s}
+.option:hover{border-color:var(--brand);background:var(--brand-light)}
+.option.selected{border-color:var(--brand);background:var(--brand-light)}
+.option.correct{border-color:var(--accent);background:var(--accent-light)}
+.option.wrong{border-color:var(--danger);background:var(--danger-light)}
+.option-letter{width:28px;height:28px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0}
+.option-text{font-size:.9rem;padding-top:3px}
+.timer-bar{height:4px;background:var(--surface3);border-radius:2px;margin-top:.75rem;overflow:hidden}
+.timer-fill{height:100%;background:var(--brand);border-radius:2px;transition:width .1s linear}
+.timer-fill.warn{background:var(--warn)}
+.timer-fill.danger{background:var(--danger)}
+
+/* SCORE CARD */
+.score-wrap{max-width:540px;margin:0 auto;text-align:center}
+.score-circle{width:140px;height:140px;border-radius:50%;margin:1.5rem auto;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif}
+.score-number{font-size:2.5rem;font-weight:700}
+.score-label{font-size:.8rem;opacity:.75}
+.score-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:1.5rem 0}
+.score-item{background:var(--surface2);border-radius:var(--radius);padding:1rem;text-align:center}
+.score-item-val{font-size:1.4rem;font-weight:700;color:var(--text)}
+.score-item-lab{font-size:.75rem;color:var(--text3);margin-top:2px}
+
+/* ONBOARDING STEPPER */
+.stepper{display:flex;align-items:center;gap:0;margin-bottom:2rem;overflow:hidden;border-radius:var(--radius-lg);background:#fff;border:1px solid var(--border)}
+.step{flex:1;padding:.875rem .5rem;text-align:center;font-size:.8rem;font-weight:600;color:var(--text3);border-right:1px solid var(--border);position:relative;transition:all .2s}
+.step:last-child{border-right:none}
+.step.active{background:var(--brand);color:#fff}
+.step.done{background:var(--accent-light);color:#065f46}
+.step-num{display:block;font-size:1rem;font-weight:700;margin-bottom:2px}
+
+/* PLACEMENT READINESS METER */
+.readiness-meter{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.5rem;margin-bottom:1.5rem}
+.meter-bar-wrap{height:16px;background:var(--surface3);border-radius:8px;overflow:hidden;margin:1rem 0}
+.meter-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--brand),var(--accent));transition:width 1s ease}
+.meter-labels{display:flex;justify-content:space-between;font-size:.75rem;color:var(--text3)}
+
+/* NOTIFICATION */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--text);color:#fff;padding:.875rem 1.25rem;border-radius:var(--radius);font-size:.875rem;font-weight:500;box-shadow:var(--shadow-lg);z-index:9999;display:flex;align-items:center;gap:8px;animation:slideIn .3s ease}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.toast.success{background:var(--accent)}
+.toast.error{background:var(--danger)}
+.toast.warn{background:var(--warn)}
+
+/* PROFILE */
+.profile-hero{background:linear-gradient(135deg,var(--brand) 0%,var(--brand-mid) 100%);border-radius:var(--radius-lg);padding:2rem;color:#fff;margin-bottom:1.5rem;position:relative;overflow:hidden}
+.profile-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.06)}
+.profile-avatar{width:72px;height:72px;border-radius:50%;border:3px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:1.75rem;font-weight:700;margin-bottom:1rem}
+.profile-name{font-size:1.4rem;font-weight:700;margin-bottom:.25rem}
+.profile-meta{display:flex;gap:1.5rem;margin-top:1rem;flex-wrap:wrap}
+.profile-meta-item{font-size:.85rem;opacity:.85;display:flex;align-items:center;gap:5px}
+
+/* TABS */
+.tabs{display:flex;gap:4px;background:var(--surface3);border-radius:var(--radius);padding:4px;margin-bottom:1.5rem}
+.tab-btn{flex:1;padding:.5rem .75rem;border-radius:8px;background:transparent;font-size:.85rem;font-weight:500;color:var(--text2);transition:all .2s;cursor:pointer;border:none}
+.tab-btn.active{background:#fff;color:var(--brand);box-shadow:var(--shadow)}
+
+/* UPLOAD AREA */
+.upload-area{border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:2.5rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)}
+.upload-area:hover{border-color:var(--brand);background:var(--brand-light)}
+.upload-icon{font-size:2.5rem;margin-bottom:.75rem;display:block}
+.upload-text{font-size:.875rem;color:var(--text2)}
+.upload-sub{font-size:.75rem;color:var(--text3);margin-top:.25rem}
+
+/* CHART WRAPPER */
+.chart-wrap{position:relative;width:100%}
+
+/* FEEDBACK */
+.feedback-card{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.25rem;margin-bottom:.875rem;transition:all .2s}
+.feedback-card:hover{box-shadow:var(--shadow-md)}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:3rem 1.5rem;color:var(--text3)}
+.empty-icon{font-size:3.5rem;margin-bottom:1rem;display:block}
+.empty-title{font-size:1rem;font-weight:600;color:var(--text2);margin-bottom:.5rem}
+.empty-sub{font-size:.875rem}
+
+/* NOTIFICATION CENTER */
+.notif-item{display:flex;gap:12px;padding:.875rem 1.25rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.notif-item:hover{background:var(--surface2)}
+.notif-item.unread{background:#fafbff}
+.notif-dot-small{width:8px;height:8px;border-radius:50%;background:var(--brand);flex-shrink:0;margin-top:5px}
+.notif-time{font-size:.72rem;color:var(--text3);margin-top:2px}
+
+/* LEADERBOARD */
+.lb-row{display:flex;align-items:center;gap:12px;padding:.75rem 1.25rem;border-bottom:1px solid var(--border);transition:background .15s}
+.lb-row:hover{background:var(--surface2)}
+.lb-rank{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0}
+.lb-rank.gold{background:#FEF3C7;color:#92400e}
+.lb-rank.silver{background:#F1F5F9;color:var(--text2)}
+.lb-rank.bronze{background:#FEF3C7;color:#b45309}
+.lb-rank.other{background:var(--surface3);color:var(--text3)}
+
+/* AI CHAT */
+.ai-chat{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--border);display:flex;flex-direction:column;height:480px}
+.ai-messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem}
+.msg{max-width:75%;padding:.75rem 1rem;border-radius:var(--radius);font-size:.875rem;line-height:1.6}
+.msg.user{background:var(--brand);color:#fff;align-self:flex-end;border-radius:var(--radius) var(--radius) 4px var(--radius)}
+.msg.ai{background:var(--surface2);color:var(--text);align-self:flex-start;border-radius:var(--radius) var(--radius) var(--radius) 4px}
+.ai-input-row{padding:.875rem 1rem;border-top:1px solid var(--border);display:flex;gap:.5rem}
+.ai-input{flex:1;padding:.6rem .875rem;border:1.5px solid var(--border);border-radius:20px;font-size:.875rem}
+.ai-input:focus{outline:none;border-color:var(--brand)}
+.ai-send{width:36px;height:36px;background:var(--brand);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ai-send:hover{background:var(--brand-dark)}
+
+/* ROADMAP */
+.roadmap-item{display:flex;gap:1rem;padding:1rem 0;border-bottom:1px solid var(--border)}
+.roadmap-item:last-child{border-bottom:none}
+.roadmap-line{display:flex;flex-direction:column;align-items:center;gap:4px}
+.roadmap-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.roadmap-track{width:2px;flex:1;background:var(--border);min-height:30px}
+
+/* INTERVIEW PREP */
+.prep-card{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.25rem;margin-bottom:.875rem}
+.prep-tag{display:inline-block;padding:.2rem .55rem;border-radius:6px;font-size:.7rem;font-weight:600;margin-right:.4rem;margin-bottom:.4rem}
+
+/* Responsive */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);z-index:200}
+  .sidebar.open{transform:translateX(0);box-shadow:var(--shadow-lg)}
+  .sidebar-overlay{display:block}
+  .main-content{margin-left:0!important}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .auth-left{display:none}
+  .auth-right{width:100%;padding:2rem 1.5rem}
+  .hamburger{display:flex}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .page-content{padding:1rem}
+  .topbar{padding:.75rem 1rem}
+}
+
+.spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback,createContext,useContext}=React;
+
+// ─── DB / PERSISTENCE ─────────────────────────────────────────────────────────
+const DB={
+  get:(k)=>{try{return JSON.parse(localStorage.getItem('pt_'+k))||null}catch{return null}},
+  set:(k,v)=>{localStorage.setItem('pt_'+k,JSON.stringify(v))},
+  del:(k)=>{localStorage.removeItem('pt_'+k)},
+};
+
+// ─── INITIAL SEED DATA ────────────────────────────────────────────────────────
+const seedData=()=>{
+  if(DB.get('seeded')) return;
+  const users=[
+    {id:'a1',name:'Admin User',email:'admin@placetrack.in',password:'admin123',role:'admin',department:'Administration',createdAt:'2024-01-01'},
+    {id:'f1',name:'Dr. Priya Sharma',email:'priya@placetrack.in',password:'faculty123',role:'faculty',department:'Computer Science',specialization:'Data Science',createdAt:'2024-01-05'},
+    {id:'f2',name:'Prof. Arjun Nair',email:'arjun@placetrack.in',password:'faculty123',role:'faculty',department:'Information Technology',specialization:'Web Development',createdAt:'2024-01-05'},
+    {id:'s1',name:'Rahul Kumar',email:'rahul@student.in',password:'student123',role:'student',department:'Computer Science',year:'3rd Year',batch:'2022-2026',usn:'1CS22CS101',phone:'9876543210',onboardingDone:true,aptitudeScore:72,softSkillsScore:68,codingScore:75,projectScore:4,certScore:3,overallRating:0,createdAt:'2024-01-10'},
+    {id:'s2',name:'Ananya Singh',email:'ananya@student.in',password:'student123',role:'student',department:'Information Technology',year:'3rd Year',batch:'2022-2026',usn:'1IT22IS201',phone:'9876543211',onboardingDone:true,aptitudeScore:85,softSkillsScore:78,codingScore:88,projectScore:4,certScore:4,overallRating:0,createdAt:'2024-01-10'},
+    {id:'s3',name:'Vikram Reddy',email:'vikram@student.in',password:'student123',role:'student',department:'Computer Science',year:'4th Year',batch:'2021-2025',usn:'1CS21CS055',phone:'9876543212',onboardingDone:false,aptitudeScore:0,softSkillsScore:0,codingScore:0,projectScore:0,certScore:0,overallRating:0,createdAt:'2024-01-12'},
+    {id:'s4',name:'Meera Pillai',email:'meera@student.in',password:'student123',role:'student',department:'Electronics',year:'2nd Year',batch:'2023-2027',usn:'1EC23EC310',phone:'9876543213',onboardingDone:true,aptitudeScore:61,softSkillsScore:74,codingScore:58,projectScore:3,certScore:2,overallRating:0,createdAt:'2024-01-15'},
+  ];
+  const notifications=[
+    {id:'n1',userId:'s1',title:'Assessment Due',message:'Complete your aptitude test before Friday',type:'warn',read:false,createdAt:'2024-06-01'},
+    {id:'n2',userId:'s1',title:'Rating Updated',message:'Dr. Priya Sharma has rated your project',type:'success',read:false,createdAt:'2024-06-02'},
+    {id:'n3',userId:'f1',title:'New Submission',message:'Rahul Kumar submitted a new project document',type:'info',read:false,createdAt:'2024-06-01'},
+    {id:'n4',userId:'a1',title:'New Registration',message:'5 new students registered today',type:'info',read:false,createdAt:'2024-06-01'},
+  ];
+  const submissions=[
+    {id:'sub1',studentId:'s1',type:'project',title:'E-Commerce Web App',description:'Full stack MERN application with payment integration',fileUrl:'project_rahul.pdf',uploadedAt:'2024-05-15',facultyId:null,facultyRating:0,facultyComment:'',status:'pending'},
+    {id:'sub2',studentId:'s1',type:'certificate',title:'AWS Certified Developer',description:'Amazon Web Services Developer Associate certification',fileUrl:'aws_cert_rahul.pdf',uploadedAt:'2024-05-20',facultyId:null,facultyRating:0,facultyComment:'',status:'pending',originalityScore:0},
+    {id:'sub3',studentId:'s2',type:'project',title:'ML Sentiment Analyzer',description:'Python-based NLP model for sentiment analysis',fileUrl:'project_ananya.pdf',uploadedAt:'2024-05-18',facultyId:'f1',facultyRating:5,facultyComment:'Excellent work with real-world dataset.',status:'reviewed'},
+    {id:'sub4',studentId:'s2',type:'certificate',title:'Google Data Analytics',description:'Coursera professional certificate in data analytics',fileUrl:'google_cert_ananya.pdf',uploadedAt:'2024-05-22',facultyId:'f1',facultyRating:4,facultyComment:'Valid certificate with strong skillset.',status:'reviewed',originalityScore:92},
+  ];
+  DB.set('users',users);
+  DB.set('notifications',notifications);
+  DB.set('submissions',submissions);
+  DB.set('seeded',true);
+};
+seedData();
+
+// ─── CONTEXTS ─────────────────────────────────────────────────────────────────
+const AuthCtx=createContext(null);
+const ToastCtx=createContext(null);
+const DarkCtx=createContext({dark:false,toggle:()=>{}});
+
+// ─── APTITUDE QUESTIONS BANK ──────────────────────────────────────────────────
+const APTITUDE_Q=[
+  {q:"If 2x + 3 = 11, what is x?",opts:["3","4","5","6"],ans:1,category:"Algebra"},
+  {q:"A train travels 360 km in 4 hours. What is its speed?",opts:["80 km/h","90 km/h","100 km/h","70 km/h"],ans:1,category:"Time & Distance"},
+  {q:"Which number is next in series: 2, 6, 12, 20, 30, ?",opts:["38","40","42","44"],ans:2,category:"Series"},
+  {q:"If A=1, B=2... Z=26, what is the value of 'CAB'?",opts:["6","7","8","9"],ans:0,category:"Coding"},
+  {q:"A shopkeeper marks goods 30% above cost. He allows 20% discount. Profit%?",opts:["4%","2%","6%","8%"],ans:0,category:"Profit & Loss"},
+  {q:"If today is Wednesday, what day will it be after 100 days?",opts:["Friday","Saturday","Sunday","Monday"],ans:1,category:"Calendar"},
+  {q:"Find the odd one out: 36, 49, 64, 72, 81",opts:["36","72","64","81"],ans:1,category:"Series"},
+  {q:"A can do a job in 10 days, B in 15 days. Together in how many days?",opts:["5","6","7","8"],ans:1,category:"Work & Time"},
+  {q:"What is 15% of 240?",opts:["36","30","42","48"],ans:0,category:"Percentage"},
+  {q:"If MANGO = 13+1+14+7+15 = 50, then ORANGE = ?",opts:["60","63","65","67"],ans:1,category:"Coding"},
+  {q:"A sum of money doubles in 5 years at simple interest. Rate% p.a.?",opts:["10%","15%","20%","25%"],ans:2,category:"Simple Interest"},
+  {q:"Choose the analogy: Book:Author :: Painting:?",opts:["Gallery","Museum","Artist","Canvas"],ans:2,category:"Analogy"},
+  {q:"Average of 5 numbers is 25. If one number is excluded, average becomes 22. What is the excluded number?",opts:["35","37","39","41"],ans:1,category:"Average"},
+  {q:"If 6 men can complete a work in 12 days, how many men needed to complete in 8 days?",opts:["8","9","10","7"],ans:1,category:"Work & Time"},
+  {q:"Which is a prime number: 91, 97, 99, 93?",opts:["91","93","97","99"],ans:2,category:"Number Theory"},
+  // Extended bank
+  {q:"A boat goes 30 km upstream in 6 hours and 36 km downstream in 4 hours. Speed of stream?",opts:["1.5 km/h","2 km/h","2.5 km/h","3 km/h"],ans:2,category:"Boats & Streams"},
+  {q:"Two numbers are in ratio 3:5. Their LCM is 75. What is their HCF?",opts:["3","5","15","25"],ans:1,category:"LCM & HCF"},
+  {q:"How many 3-digit numbers are divisible by 7?",opts:["126","127","128","129"],ans:2,category:"Number Theory"},
+  {q:"A clock shows 3:00. What is the angle between the hands?",opts:["75°","80°","90°","100°"],ans:2,category:"Clocks"},
+  {q:"Pipes A and B fill a tank in 12 and 15 min. Pipe C empties in 10 min. All open: fill time?",opts:["60 min","65 min","70 min","75 min"],ans:0,category:"Pipes & Cisterns"},
+  {q:"In a class, 40% are boys. 60% of girls passed. 80% of boys passed. Total passed = 168 out of 300. How many girls?",opts:["150","170","180","200"],ans:2,category:"Percentage"},
+  {q:"If log(2)=0.301, what is log(8)?",opts:["0.602","0.903","0.801","1.204"],ans:1,category:"Logarithms"},
+  {q:"Find the missing: 1, 4, 9, 16, 25, ?, 49",opts:["30","32","36","38"],ans:2,category:"Series"},
+  {q:"Compound interest on ₹8000 at 10% p.a. for 2 years?",opts:["₹1600","₹1680","₹1700","₹1760"],ans:1,category:"Compound Interest"},
+  {q:"A man walks at 5 km/h and covers 2.5 km. Time taken?",opts:["20 min","25 min","30 min","35 min"],ans:2,category:"Time & Distance"},
+  {q:"If 5 oranges cost as much as 8 mangoes, and 6 mangoes cost ₹9, cost of 10 oranges?",opts:["₹24","₹26","₹28","₹30"],ans:0,category:"Ratio & Proportion"},
+  {q:"What comes next: A, C, F, J, O, ?",opts:["T","U","V","W"],ans:1,category:"Series"},
+  {q:"Two dice are rolled. Probability both show same number?",opts:["1/6","1/4","1/3","1/2"],ans:0,category:"Probability"},
+  {q:"A 20% discount on ₹500 article, then 10% further discount. Final price?",opts:["₹360","₹380","₹350","₹370"],ans:0,category:"Discount"},
+  {q:"If COMPUTER = 73, then LAPTOP = ?",opts:["68","70","72","74"],ans:1,category:"Coding"},
+];
+
+const SOFT_SKILL_Q=[
+  {q:"Your team member disagrees with your approach on a critical project. What do you do?",opts:["Insist on your approach","Listen and find a middle ground","Escalate to manager","Ignore the disagreement"],ans:1,skill:"Conflict Resolution"},
+  {q:"You're presenting to 50 people and forget your next point. What do you do?",opts:["Panic and stop","Apologize repeatedly","Pause, collect thoughts, continue","Read from notes nervously"],ans:2,skill:"Public Speaking"},
+  {q:"A colleague is struggling with their deadline. You're also busy. What do you do?",opts:["Focus on your work only","Offer a small help when possible","Tell them to manage alone","Complain to manager"],ans:1,skill:"Teamwork"},
+  {q:"You receive harsh feedback on your work. How do you respond?",opts:["Defend your work","Accept all feedback without question","Evaluate objectively and improve","Ignore the feedback"],ans:2,skill:"Emotional Intelligence"},
+  {q:"You need to explain a complex technical concept to a non-technical manager. Best approach?",opts:["Use technical jargon","Refuse to simplify","Use analogies and simple language","Skip the explanation"],ans:2,skill:"Communication"},
+  {q:"You realize you made an error that affected a deliverable. What do you do?",opts:["Hide it","Blame others","Acknowledge, fix, and prevent recurrence","Wait to see if anyone notices"],ans:2,skill:"Accountability"},
+  {q:"You disagree with a company policy. Best action?",opts:["Publicly criticize","Quit immediately","Raise concerns through proper channel","Silently comply with resentment"],ans:2,skill:"Professionalism"},
+  {q:"How do you handle multiple urgent tasks with the same deadline?",opts:["Do them randomly","Panic and do nothing","Prioritize by impact and communicate","Ask someone else to do all of them"],ans:2,skill:"Time Management"},
+  // Extended
+  {q:"A client gives you a last-minute requirement change. How do you handle it?",opts:["Refuse immediately","Accept without informing team","Assess impact, communicate timeline changes","Silently make the change and hope for the best"],ans:2,skill:"Adaptability"},
+  {q:"Your manager takes credit for your work in a meeting. You:",opts:["Confront them publicly","Say nothing forever","Privately address it professionally","Complain to HR immediately"],ans:2,skill:"Professionalism"},
+  {q:"You are leading a team and one member consistently underperforms. Your approach?",opts:["Ignore it","Do their work yourself","Have a 1:1 to understand and support","Report to HR immediately"],ans:2,skill:"Leadership"},
+  {q:"A co-worker shares confidential client data casually. You:",opts:["Ignore it","Share it further","Inform them it's a policy violation","Post about it on social media"],ans:2,skill:"Ethics"},
+  {q:"You're assigned a project with unclear goals. First step?",opts:["Start working randomly","Wait for clarity forever","Ask for a clear brief and success criteria","Resign from the project"],ans:2,skill:"Communication"},
+  {q:"In a group discussion, one person dominates the conversation. As facilitator you:",opts:["Let them continue","Interrupt rudely","Politely invite others to share views","End the discussion"],ans:2,skill:"Leadership"},
+  {q:"You miss an important deadline due to unforeseen personal issues. You:",opts:["Say nothing","Make excuses","Proactively communicate ASAP and propose recovery plan","Blame your team"],ans:2,skill:"Accountability"},
+];
+
+const CODING_Q=[
+  {q:"What is the time complexity of binary search?",opts:["O(n)","O(log n)","O(n log n)","O(1)"],ans:1,lang:"DSA"},
+  {q:"Which data structure uses LIFO principle?",opts:["Queue","Stack","Array","Linked List"],ans:1,lang:"DSA"},
+  {q:"What does 'git commit -m' do?",opts:["Creates a branch","Commits with a message","Merges branches","Pulls changes"],ans:1,lang:"Git"},
+  {q:"Which HTTP method is used to update a resource?",opts:["GET","POST","PUT","DELETE"],ans:2,lang:"Web"},
+  {q:"In Python, what does list.pop() do without arguments?",opts:["Removes first element","Removes last element","Clears the list","Returns list length"],ans:1,lang:"Python"},
+  {q:"What is a foreign key in SQL?",opts:["Primary identifier","Links to another table's primary key","Index for searching","None of these"],ans:1,lang:"SQL"},
+  {q:"What does CSS 'z-index' control?",opts:["Font size","Element stacking order","Color opacity","Width"],ans:1,lang:"CSS"},
+  {q:"Which sorting algorithm has best average-case O(n log n)?",opts:["Bubble Sort","Insertion Sort","Merge Sort","Selection Sort"],ans:2,lang:"DSA"},
+  {q:"What is the output of: print(type([]))?",opts:["<class 'list'>","list","[]","Array"],ans:0,lang:"Python"},
+  {q:"What does 'const' do in JavaScript?",opts:["Creates variable","Creates constant block-scoped variable","Creates function","Creates class"],ans:1,lang:"JavaScript"},
+  // Extended
+  {q:"What is a deadlock in OS?",opts:["Process running too fast","Two processes waiting on each other indefinitely","Memory overflow","CPU overheating"],ans:1,lang:"OS"},
+  {q:"Which of these is NOT a JavaScript framework?",opts:["React","Angular","Django","Vue"],ans:2,lang:"Web"},
+  {q:"What does ORM stand for?",opts:["Object Relational Mapping","Object Runtime Model","Online Resource Manager","Object Request Module"],ans:0,lang:"Database"},
+  {q:"In Big-O notation, O(1) means?",opts:["Linear time","Constant time","Quadratic time","Logarithmic time"],ans:1,lang:"DSA"},
+  {q:"Which command shows all Docker running containers?",opts:["docker list","docker ps","docker run","docker show"],ans:1,lang:"DevOps"},
+  {q:"What is the purpose of 'useEffect' in React?",opts:["To manage state","To perform side effects","To style components","To handle routing"],ans:1,lang:"React"},
+  {q:"What does ACID stand for in databases?",opts:["Atomic Consistent Isolated Durable","Array Collection Index Data","Automated Compile Insert Delete","None of these"],ans:0,lang:"Database"},
+  {q:"Which HTTP status code means 'Not Found'?",opts:["200","301","403","404"],ans:3,lang:"Web"},
+  {q:"What is a closure in JavaScript?",opts:["A loop that closes itself","A function with access to its outer scope variables","A CSS property","An HTML tag"],ans:1,lang:"JavaScript"},
+  {q:"Which data structure is used in BFS (Breadth First Search)?",opts:["Stack","Queue","Heap","Tree"],ans:1,lang:"DSA"},
+  {q:"What is the difference between == and === in JavaScript?",opts:["No difference","=== also checks type","== also checks type","=== is faster"],ans:1,lang:"JavaScript"},
+  {q:"What does 'SELECT DISTINCT' do in SQL?",opts:["Selects null values","Returns only unique rows","Selects deleted rows","Joins two tables"],ans:1,lang:"SQL"},
+  {q:"Which Python library is used for data manipulation?",opts:["NumPy","Pandas","Matplotlib","Scikit-learn"],ans:1,lang:"Python"},
+  {q:"What is the space complexity of merge sort?",opts:["O(1)","O(log n)","O(n)","O(n²)"],ans:2,lang:"DSA"},
+  {q:"What is normalization in databases?",opts:["Increasing data redundancy","Organizing data to reduce redundancy","Encrypting data","Backing up data"],ans:1,lang:"Database"},
+];
+
+const GOAL_Q=[
+  {q:"What is your primary career goal after graduation?",opts:["Software Development","Data Science / AI","Product Management","Cybersecurity / Cloud"],ans:-1},
+  {q:"Which domain excites you most?",opts:["Frontend / UI Design","Backend Engineering","DevOps / Infrastructure","Research / Academia"],ans:-1},
+  {q:"What type of company do you prefer?",opts:["Large MNC (TCS, Infosys)","Mid-size product company","Early-stage startup","Government / PSU"],ans:-1},
+  {q:"Your preferred work style?",opts:["Individual contributor","Team lead / Manager track","Freelancer / Consultant","Entrepreneur"],ans:-1},
+  {q:"Most important factor in choosing a job?",opts:["High salary","Work-life balance","Growth opportunities","Meaningful impact"],ans:-1},
+  {q:"Which skill do you most want to improve?",opts:["Coding & DSA","Communication & Leadership","System Design","Cloud & DevOps"],ans:-1},
+  {q:"Your target package (CTC)?",opts:["Under 6 LPA","6–12 LPA","12–25 LPA","25+ LPA"],ans:-1},
+];
+
+// ─── DARK MODE TOGGLE ────────────────────────────────────────────────────────
+const DarkToggle=()=>{
+  const {dark,toggle}=useContext(DarkCtx);
+  return(
+    <button className={`dark-toggle ${dark?'on':'off'}`} onClick={toggle} title={dark?'Switch to light mode':'Switch to dark mode'} aria-label="Toggle dark mode">
+      <div className="dark-toggle-thumb"/>
+    </button>
+  );
+};
+
+// ─── HELPER COMPONENTS ────────────────────────────────────────────────────────
+const Avatar=({name,color='#4F46E5',size=38})=>{
+  const initials=(name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const colors=['#4F46E5','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4','#EC4899'];
+  const bg=colors[name?.charCodeAt(0)%colors.length]||color;
+  return <div className="user-avatar" style={{background:bg,width:size,height:size,fontSize:size*0.35}}>{initials}</div>;
+};
+
+const Badge=({type='neutral',children})=><span className={`badge badge-${type}`}>{children}</span>;
+
+const ProgressBar=({value,max=100,color='var(--brand)'})=>(
+  <div className="progress-bar">
+    <div className="progress-fill" style={{width:`${Math.min(100,(value/max)*100)}%`,background:color}}/>
+  </div>
+);
+
+const Stars=({value=0,onChange,readOnly=false})=>(
+  <div className="stars">
+    {[1,2,3,4,5].map(i=>(
+      <span key={i} className={`star ${i<=value?'filled':'empty'}`}
+        onClick={()=>!readOnly&&onChange&&onChange(i)}>★</span>
+    ))}
+  </div>
+);
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+const ToastProvider=({children})=>{
+  const [toast,setToast]=useState(null);
+  const show=(msg,type='success')=>{
+    setToast({msg,type});
+    setTimeout(()=>setToast(null),3200);
+  };
+  return(
+    <ToastCtx.Provider value={show}>
+      {children}
+      {toast&&<div className={`toast ${toast.type}`}>
+        <span>{toast.type==='success'?'✓':toast.type==='error'?'✕':'!'}</span>
+        {toast.msg}
+      </div>}
+    </ToastCtx.Provider>
+  );
+};
+
+// ─── AUTH PAGES ───────────────────────────────────────────────────────────────
+const LoginPage=({onAuth})=>{
+  const showToast=useContext(ToastCtx);
+  const [tab,setTab]=useState('login');
+  const [email,setEmail]=useState('');
+  const [pw,setPw]=useState('');
+  const [name,setName]=useState('');
+  const [dept,setDept]=useState('Computer Science');
+  const [year,setYear]=useState('1st Year');
+  const [batch,setBatch]=useState('2024-2028');
+  const [usn,setUsn]=useState('');
+  const [role,setRole]=useState('student');
+  const [captchaQ,setCaptchaQ]=useState(null);
+  const [captchaAns,setCaptchaAns]=useState('');
+  const [loading,setLoading]=useState(false);
+
+  const genCaptcha=useCallback(()=>{
+    const a=Math.floor(Math.random()*9)+1,b=Math.floor(Math.random()*9)+1;
+    setCaptchaQ({a,b,ans:a+b});
+    setCaptchaAns('');
+  },[]);
+  useEffect(()=>genCaptcha(),[]);
+
+  const handleLogin=()=>{
+    if(!email||!pw){showToast('Fill in all fields','error');return;}
+    const users=DB.get('users')||[];
+    const u=users.find(u=>u.email===email&&u.password===pw);
+    if(!u){showToast('Invalid credentials','error');return;}
+    setLoading(true);
+    setTimeout(()=>{
+      DB.set('currentUser',u);
+      showToast(`Welcome back, ${u.name}!`);
+      onAuth(u);
+      setLoading(false);
+    },800);
+  };
+
+  const handleRegister=()=>{
+    if(!name||!email||!pw||!usn){showToast('All fields required','error');return;}
+    if(parseInt(captchaAns)!==captchaQ.ans){showToast('Wrong captcha answer','error');genCaptcha();return;}
+    const users=DB.get('users')||[];
+    if(users.find(u=>u.email===email)){showToast('Email already registered','error');return;}
+    const newUser={
+      id:'s'+Date.now(),name,email,password:pw,role:'student',department:dept,
+      year,batch,usn,phone:'',onboardingDone:false,
+      aptitudeScore:0,softSkillsScore:0,codingScore:0,projectScore:0,certScore:0,overallRating:0,
+      createdAt:new Date().toISOString().split('T')[0]
+    };
+    users.push(newUser);
+    DB.set('users',users);
+    setLoading(true);
+    setTimeout(()=>{
+      DB.set('currentUser',newUser);
+      showToast('Account created! Welcome aboard 🎉');
+      onAuth(newUser);
+      setLoading(false);
+    },800);
+  };
+
+  const demoLogin=(demoEmail,demoPw)=>{
+    setEmail(demoEmail);setPw(demoPw);
+    setTimeout(()=>{
+      const users=DB.get('users')||[];
+      const u=users.find(u=>u.email===demoEmail);
+      if(u){DB.set('currentUser',u);showToast(`Logged in as ${u.role}: ${u.name}`);onAuth(u);}
+    },400);
+  };
+
+  return(
+    <div className="auth-wrap">
+      <div className="auth-left">
+        <div className="auth-left-inner">
+          <div className="auth-logo">
+            <div className="auth-logo-icon">🎯</div>
+            <div className="auth-logo-name">PlaceTrack</div>
+          </div>
+          <h1 className="auth-headline">Your placement<br/><span>journey starts</span><br/>here.</h1>
+          <p className="auth-sub">Track skills, complete assessments, earn ratings, and land your dream placement — all in one place.</p>
+          <div className="auth-features">
+            {['Real-time skill tracking across 5 competency areas','AI-powered interview prep and roadmap generation','Faculty reviews & certificate verification','Placement readiness score with company matching','Live leaderboard and batch analytics'].map(f=>(
+              <div key={f} className="auth-feat"><div className="auth-feat-dot"/>{f}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="auth-right">
+        <div className="auth-tabs">
+          <button className={`auth-tab ${tab==='login'?'active':''}`} onClick={()=>setTab('login')}>Sign In</button>
+          <button className={`auth-tab ${tab==='register'?'active':''}`} onClick={()=>setTab('register')}>Register</button>
+        </div>
+        {tab==='login'?(
+          <>
+            <h2 className="auth-title">Welcome back</h2>
+            <p className="auth-desc">Sign in to continue your placement journey</p>
+            <div className="form-group">
+              <label className="form-label">Email address</label>
+              <input className="form-input" type="email" placeholder="you@college.in" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleLogin()}/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input className="form-input" type="password" placeholder="••••••••" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleLogin()}/>
+            </div>
+            <button className="btn-primary" onClick={handleLogin} disabled={loading}>
+              {loading?<span className="spinner"/>:'Sign in →'}
+            </button>
+            <div className="auth-divider">Quick demo access</div>
+            <div className="auth-demo">
+              <button className="demo-btn" onClick={()=>demoLogin('rahul@student.in','student123')}>👨‍🎓 Student</button>
+              <button className="demo-btn" onClick={()=>demoLogin('priya@placetrack.in','faculty123')}>👩‍🏫 Faculty</button>
+              <button className="demo-btn" onClick={()=>demoLogin('admin@placetrack.in','admin123')}>⚙️ Admin</button>
+            </div>
+          </>
+        ):(
+          <>
+            <h2 className="auth-title">Create account</h2>
+            <p className="auth-desc">Join your batch and start tracking your readiness</p>
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <input className="form-input" placeholder="Rahul Kumar" value={name} onChange={e=>setName(e.target.value)}/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">USN / Roll Number</label>
+              <input className="form-input" placeholder="1CS22CS001" value={usn} onChange={e=>setUsn(e.target.value)}/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input className="form-input" type="email" placeholder="rahul@student.in" value={email} onChange={e=>setEmail(e.target.value)}/>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}}>
+              <div className="form-group">
+                <label className="form-label">Department</label>
+                <select className="form-select" value={dept} onChange={e=>setDept(e.target.value)}>
+                  {['Computer Science','Information Technology','Electronics','Mechanical','Civil'].map(d=><option key={d}>{d}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Year</label>
+                <select className="form-select" value={year} onChange={e=>setYear(e.target.value)}>
+                  {['1st Year','2nd Year','3rd Year','4th Year'].map(y=><option key={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input className="form-input" type="password" placeholder="Min 6 characters" value={pw} onChange={e=>setPw(e.target.value)}/>
+            </div>
+            {captchaQ&&(
+              <div className="auth-captcha-wrap">
+                <div>
+                  <div style={{fontSize:'.75rem',color:'var(--text3)',marginBottom:'4px'}}>Security check</div>
+                  <div className="captcha-q">What is {captchaQ.a} + {captchaQ.b} ?</div>
+                </div>
+                <input className="captcha-input" placeholder="?" value={captchaAns} onChange={e=>setCaptchaAns(e.target.value)} type="number"/>
+                <div className="captcha-refresh" onClick={genCaptcha} title="Refresh">↻</div>
+              </div>
+            )}
+            <button className="btn-primary" onClick={handleRegister} disabled={loading}>
+              {loading?<span className="spinner"/>:'Create Account →'}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── SIDEBAR ──────────────────────────────────────────────────────────────────
+const navConfig={
+  student:[
+    {section:'Overview',items:[{key:'dashboard',icon:'🏠',label:'Dashboard'},{key:'profile',icon:'👤',label:'My Profile'}]},
+    {section:'Assessments',items:[{key:'aptitude',icon:'🧠',label:'Aptitude Test'},{key:'softskills',icon:'💬',label:'Soft Skills'},{key:'coding',icon:'💻',label:'Coding Test'},{key:'goals',icon:'🎯',label:'Goal Setting'}]},
+    {section:'Portfolio',items:[{key:'submissions',icon:'📂',label:'My Submissions'},{key:'certificates',icon:'🏆',label:'Certificates'},{key:'roadmap',icon:'🗺️',label:'Career Roadmap'}]},
+    {section:'Compete',items:[{key:'leaderboard',icon:'📊',label:'Leaderboard'},{key:'interviews',icon:'🎤',label:'Interview Prep'}]},
+    {section:'AI Tools',items:[{key:'aicoach',icon:'🤖',label:'AI Coach'}]},
+  ],
+  faculty:[
+    {section:'Overview',items:[{key:'dashboard',icon:'🏠',label:'Dashboard'},{key:'students',icon:'👥',label:'My Students'}]},
+    {section:'Grading',items:[{key:'review',icon:'📋',label:'Review Submissions'},{key:'ratings',icon:'⭐',label:'Rate Students'},{key:'certificates',icon:'🔍',label:'Verify Certificates'}]},
+    {section:'Analytics',items:[{key:'analytics',icon:'📈',label:'Batch Analytics'},{key:'reports',icon:'📄',label:'Reports'}]},
+  ],
+  admin:[
+    {section:'Overview',items:[{key:'dashboard',icon:'🏠',label:'Dashboard'},{key:'users',icon:'👥',label:'User Management'}]},
+    {section:'Management',items:[{key:'students',icon:'🎓',label:'All Students'},{key:'faculty',icon:'👩‍🏫',label:'Faculty'}]},
+    {section:'Analytics',items:[{key:'analytics',icon:'📈',label:'Platform Analytics'},{key:'placements',icon:'💼',label:'Placement Tracking'},{key:'reports',icon:'📄',label:'Reports'}]},
+    {section:'Settings',items:[{key:'settings',icon:'⚙️',label:'System Settings'}]},
+  ],
+};
+
+const Sidebar=({user,active,onNav,onLogout,notifCount,open,onClose,navOverride})=>{
+  const config=navOverride||navConfig[user.role]||[];
+  return(
+    <>
+      {open&&<div className="sidebar-overlay" onClick={onClose}/>}
+      <nav className={`sidebar ${open?'open':''}`}>
+        <div className="sidebar-logo">
+          <div className="sidebar-logo-icon">🎯</div>
+          <div className="sidebar-logo-text">PlaceTrack</div>
+          <button style={{marginLeft:'auto',background:'none',border:'none',color:'var(--text3)',fontSize:'18px',cursor:'pointer',display:'none'}} className="sidebar-close-btn" onClick={onClose}>✕</button>
+        </div>
+        <div className="sidebar-user">
+          <Avatar name={user.name}/>
+          <div>
+            <div className="user-name">{user.name}</div>
+            <div className="user-role">{user.role} {user.department&&`· ${user.department.split(' ')[0]}`}</div>
+          </div>
+        </div>
+        <div className="sidebar-nav">
+          {config.map(group=>(
+            <div key={group.section}>
+              <div className="nav-section">{group.section}</div>
+              {group.items.map(item=>(
+                <div key={item.key} className={`nav-item ${active===item.key?'active':''}`} onClick={()=>{onNav(item.key);onClose&&onClose();}}>
+                  <span className="nav-icon">{item.icon}</span>
+                  {item.label}
+                  {item.key==='review'&&notifCount>0&&<span className="nav-badge">{notifCount}</span>}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="sidebar-bottom">
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'.75rem'}}>
+            <span style={{fontSize:'.8rem',color:'var(--text3)',fontWeight:500}}>Dark mode</span>
+            <DarkToggle/>
+          </div>
+          <button className="logout-btn" onClick={onLogout}>
+            <span>🚪</span> Sign out
+          </button>
+        </div>
+      </nav>
+    </>
+  );
+};
+
+// ─── QUIZ ENGINE ──────────────────────────────────────────────────────────────
+const QuizEngine=({title,questions,onComplete,timePerQ=30,color='var(--brand)',icon='🧠'})=>{
+  const [idx,setIdx]=useState(0);
+  const [selected,setSelected]=useState(null);
+  const [answers,setAnswers]=useState([]);
+  const [timeLeft,setTimeLeft]=useState(timePerQ);
+  const [showResult,setShowResult]=useState(false);
+  const [score,setScore]=useState(0);
+  const timerRef=useRef(null);
+
+  useEffect(()=>{
+    timerRef.current=setInterval(()=>{
+      setTimeLeft(t=>{
+        if(t<=1){handleNext(null);return timePerQ;}
+        return t-1;
+      });
+    },1000);
+    return()=>clearInterval(timerRef.current);
+  },[idx]);
+
+  const handleSelect=(i)=>{
+    if(selected!==null) return;
+    setSelected(i);
+    clearInterval(timerRef.current);
+    setTimeout(()=>handleNext(i),800);
+  };
+
+  const handleNext=(sel)=>{
+    const newAnswers=[...answers,{q:idx,selected:sel,correct:questions[idx].ans===sel}];
+    setAnswers(newAnswers);
+    setSelected(null);
+    setTimeLeft(timePerQ);
+    if(idx<questions.length-1){
+      setIdx(i=>i+1);
+    } else {
+      clearInterval(timerRef.current);
+      const sc=newAnswers.filter(a=>a.correct).length;
+      const pct=Math.round((sc/questions.length)*100);
+      setScore(pct);
+      setShowResult(true);
+    }
+  };
+
+  if(showResult){
+    const correct=answers.filter(a=>a.correct).length;
+    const lvl=score>=80?'Excellent':score>=60?'Good':score>=40?'Average':'Needs Work';
+    const lvlColor=score>=80?'var(--accent)':score>=60?'var(--brand)':score>=40?'var(--warn)':'var(--danger)';
+    return(
+      <div className="score-wrap">
+        <div style={{background:'#fff',borderRadius:'var(--radius-xl)',border:'1px solid var(--border)',padding:'2.5rem',textAlign:'center'}}>
+          <div style={{fontSize:'3rem',marginBottom:'1rem'}}>{icon}</div>
+          <h2 style={{fontSize:'1.5rem',marginBottom:'.5rem'}}>{title} — Complete!</h2>
+          <div className="score-circle" style={{background:lvlColor+'20',border:`3px solid ${lvlColor}`}}>
+            <span className="score-number" style={{color:lvlColor}}>{score}%</span>
+            <span className="score-label" style={{color:lvlColor}}>{lvl}</span>
+          </div>
+          <div className="score-breakdown">
+            <div className="score-item"><div className="score-item-val" style={{color:'var(--accent)'}}>{correct}</div><div className="score-item-lab">Correct</div></div>
+            <div className="score-item"><div className="score-item-val" style={{color:'var(--danger)'}}>{questions.length-correct}</div><div className="score-item-lab">Wrong</div></div>
+            <div className="score-item"><div className="score-item-val">{questions.length}</div><div className="score-item-lab">Total</div></div>
+          </div>
+          <button className="btn-brand btn-sm" style={{padding:'.65rem 2rem',fontSize:'.9rem'}} onClick={()=>onComplete(score)}>
+            Save Score & Continue →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const q=questions[idx];
+  const timerPct=(timeLeft/timePerQ)*100;
+  const timerCls=timerPct>50?'':timerPct>25?'warn':'danger';
+
+  return(
+    <div className="quiz-wrap">
+      <div className="quiz-header" style={{background:`linear-gradient(135deg,${color},${color}cc)`}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <h2 style={{fontSize:'1.1rem',fontWeight:700}}>{icon} {title}</h2>
+          <span style={{fontSize:'1.2rem',fontWeight:700}}>{timeLeft}s</span>
+        </div>
+        <div className="quiz-meta">
+          <span className="quiz-meta-item">Question {idx+1} of {questions.length}</span>
+          <span className="quiz-meta-item">Score: {answers.filter(a=>a.correct).length} / {idx}</span>
+        </div>
+        <div className="timer-bar" style={{marginTop:'8px'}}>
+          <div className={`timer-fill ${timerCls}`} style={{width:`${timerPct}%`}}/>
+        </div>
+      </div>
+      <div className="question-card">
+        <div className="question-num">Question {idx+1}</div>
+        <div className="question-text">{q.q}</div>
+        {q.opts.map((opt,i)=>{
+          let cls='option';
+          if(selected!==null){
+            if(i===q.ans) cls+=' correct';
+            else if(i===selected) cls+=' wrong';
+          } else if(selected===i) cls+=' selected';
+          return(
+            <div key={i} className={cls} onClick={()=>handleSelect(i)}>
+              <span className="option-letter">{String.fromCharCode(65+i)}</span>
+              <span className="option-text">{opt}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{background:'#fff',borderRadius:'var(--radius-lg)',padding:'1rem 1.25rem',border:'1px solid var(--border)',display:'flex',gap:'6px',alignItems:'center',justifyContent:'center'}}>
+        {questions.map((_,i)=>(
+          <div key={i} style={{width:'24px',height:'6px',borderRadius:'3px',background:i<idx?(answers[i]?.correct?'var(--accent)':'var(--danger)'):i===idx?color:'var(--border2)'}}/>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── ONBOARDING FLOW ──────────────────────────────────────────────────────────
+const OnboardingFlow=({user,onComplete})=>{
+  const showToast=useContext(ToastCtx);
+  const [step,setStep]=useState(0);
+  const [scores,setScores]=useState({aptitude:0,softSkills:0,coding:0,goals:[]});
+  const steps=['Soft Skills','Aptitude Test','Coding Test','Goal Setting'];
+
+  const handleScore=(type,score)=>{
+    setScores(s=>({...s,[type]:score}));
+    setStep(s=>s+1);
+  };
+
+  const handleGoals=(answers)=>{
+    const goalArr=answers.map(a=>GOAL_Q[a.q].opts[a.selected]);
+    setScores(s=>({...s,goals:goalArr}));
+    // save
+    const users=DB.get('users')||[];
+    const idx=users.findIndex(u=>u.id===user.id);
+    if(idx>=0){
+      users[idx]={...users[idx],softSkillsScore:scores.softSkills,aptitudeScore:scores.aptitude,codingScore:scores.coding,onboardingDone:true,goals:goalArr};
+      DB.set('users',users);
+      DB.set('currentUser',users[idx]);
+    }
+    showToast('Onboarding complete! Welcome to your dashboard 🎉');
+    onComplete(users[idx]);
+  };
+
+  return(
+    <div className="page-content" style={{maxWidth:'800px',margin:'0 auto',paddingTop:'2rem'}}>
+      <div style={{textAlign:'center',marginBottom:'1.5rem'}}>
+        <h1 style={{fontSize:'1.6rem',marginBottom:'.5rem'}}>🎯 Welcome to PlaceTrack!</h1>
+        <p style={{color:'var(--text2)',fontSize:'.95rem'}}>Complete these 4 assessments to unlock your personalized dashboard. Estimated time: 15 mins</p>
+      </div>
+      <div className="stepper">
+        {steps.map((s,i)=>(
+          <div key={s} className={`step ${i===step?'active':i<step?'done':''}`}>
+            <span className="step-num">{i<step?'✓':i+1}</span>
+            {s}
+          </div>
+        ))}
+      </div>
+      {step===0&&<QuizEngine title="Soft Skills Assessment" questions={SOFT_SKILL_Q} onComplete={s=>handleScore('softSkills',s)} timePerQ={45} color="#8B5CF6" icon="💬"/>}
+      {step===1&&<QuizEngine title="Aptitude Test" questions={APTITUDE_Q.slice(0,10)} onComplete={s=>handleScore('aptitude',s)} timePerQ={40} color="#4F46E5" icon="🧠"/>}
+      {step===2&&<QuizEngine title="Coding Assessment" questions={CODING_Q} onComplete={s=>handleScore('coding',s)} timePerQ={35} color="#10B981" icon="💻"/>}
+      {step===3&&<GoalSurvey onComplete={handleGoals}/>}
+    </div>
+  );
+};
+
+const GoalSurvey=({onComplete})=>{
+  const [idx,setIdx]=useState(0);
+  const [answers,setAnswers]=useState([]);
+  const q=GOAL_Q[idx];
+  const select=(i)=>{
+    const newAns=[...answers,{q:idx,selected:i}];
+    setAnswers(newAns);
+    if(idx<GOAL_Q.length-1) setIdx(i=>i+1);
+    else onComplete(newAns);
+  };
+  return(
+    <div className="quiz-wrap">
+      <div className="quiz-header" style={{background:'linear-gradient(135deg,#F59E0B,#EF4444)'}}>
+        <h2 style={{fontSize:'1.1rem',fontWeight:700}}>🎯 Goal Setting Survey</h2>
+        <div className="quiz-meta"><span className="quiz-meta-item">Question {idx+1} of {GOAL_Q.length}</span></div>
+      </div>
+      <div className="question-card">
+        <div className="question-num">CAREER GOAL {idx+1}</div>
+        <div className="question-text">{q.q}</div>
+        {q.opts.map((opt,i)=>(
+          <div key={i} className="option" onClick={()=>select(i)}>
+            <span className="option-letter">{String.fromCharCode(65+i)}</span>
+            <span className="option-text">{opt}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── STUDENT DASHBOARD ────────────────────────────────────────────────────────
+const StudentDashboard=({user,onNav})=>{
+  const users=DB.get('users')||[];
+  const me=users.find(u=>u.id===user.id)||user;
+  const submissions=DB.get('submissions')||[];
+  const mySubmissions=submissions.filter(s=>s.studentId===user.id);
+  const overall=Math.round((me.aptitudeScore+me.softSkillsScore+me.codingScore)/3);
+  const readinessScore=Math.round(
+    (me.aptitudeScore*.25)+(me.softSkillsScore*.2)+(me.codingScore*.25)+(me.projectScore*4)+(me.certScore*4)
+  );
+  const allStudents=users.filter(u=>u.role==='student').sort((a,b)=>{
+    const aS=Math.round((a.aptitudeScore+a.softSkillsScore+a.codingScore)/3);
+    const bS=Math.round((b.aptitudeScore+b.softSkillsScore+b.codingScore)/3);
+    return bS-aS;
+  });
+  const myRank=allStudents.findIndex(u=>u.id===user.id)+1;
+  const skillData=[
+    {name:'Aptitude',score:me.aptitudeScore,color:'#4F46E5'},
+    {name:'Soft Skills',score:me.softSkillsScore,color:'#8B5CF6'},
+    {name:'Coding',score:me.codingScore,color:'#10B981'},
+    {name:'Projects',score:me.projectScore*20,color:'#F59E0B'},
+    {name:'Certificates',score:me.certScore*20,color:'#EF4444'},
+  ];
+
+  const canvasRef=useRef(null);
+  const chartInst=useRef(null);
+  useEffect(()=>{
+    if(!canvasRef.current) return;
+    if(chartInst.current) chartInst.current.destroy();
+    chartInst.current=new Chart(canvasRef.current,{
+      type:'radar',
+      data:{
+        labels:['Aptitude','Soft Skills','Coding','Projects','Certificates'],
+        datasets:[{
+          label:'Your Score',
+          data:[me.aptitudeScore,me.softSkillsScore,me.codingScore,me.projectScore*20,me.certScore*20],
+          backgroundColor:'rgba(79,70,229,.15)',
+          borderColor:'#4F46E5',
+          borderWidth:2,
+          pointBackgroundColor:'#4F46E5',
+          pointRadius:4,
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{r:{min:0,max:100,ticks:{stepSize:25,font:{size:10}},pointLabels:{font:{size:11,weight:'500'}}}}
+      }
+    });
+    return()=>{if(chartInst.current) chartInst.current.destroy()};
+  },[me]);
+
+  return(
+    <div>
+      {/* Placement Readiness Banner */}
+      <div className="readiness-meter">
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'.5rem'}}>
+          <div>
+            <h3 style={{fontSize:'1rem',fontWeight:700}}>🎯 Placement Readiness Score</h3>
+            <p style={{fontSize:'.8rem',color:'var(--text3)'}}>Based on all 5 skill areas</p>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{fontSize:'2rem',fontWeight:700,color:'var(--brand)'}}>{readinessScore}%</div>
+            <Badge type={readinessScore>=75?'success':readinessScore>=50?'warn':'danger'}>
+              {readinessScore>=75?'Ready for Placement':readinessScore>=50?'Almost Ready':'Needs Improvement'}
+            </Badge>
+          </div>
+        </div>
+        <div className="meter-bar-wrap"><div className="meter-fill" style={{width:`${readinessScore}%`}}/></div>
+        <div className="meter-labels"><span>0%</span><span>25% — Beginner</span><span>50% — Developing</span><span>75% — Ready</span><span>100%</span></div>
+      </div>
+
+      {/* Stats */}
+      <div className="stat-grid">
+        {[
+          {label:'Overall Score',value:`${overall}%`,icon:'📊',color:'#EEF2FF',change:'Avg of 3 tests',changeType:'neutral'},
+          {label:'Batch Rank',value:`#${myRank}`,icon:'🏆',color:'#FEF3C7',change:`of ${allStudents.length} students`},
+          {label:'Submissions',value:mySubmissions.length,icon:'📂',color:'#D1FAE5',change:`${mySubmissions.filter(s=>s.status==='reviewed').length} reviewed`},
+          {label:'Readiness',value:`${readinessScore}%`,icon:'🎯',color:'#DBEAFE',change:readinessScore>=75?'↑ Placement ready':'↑ Keep improving'},
+        ].map(s=>(
+          <div key={s.label} className="stat-card">
+            <div className="stat-icon" style={{background:s.color,fontSize:'1.5rem'}}>{s.icon}</div>
+            <div className="stat-body">
+              <div className="stat-label">{s.label}</div>
+              <div className="stat-value">{s.value}</div>
+              <div className="stat-change" style={{color:'var(--text3)'}}>{s.change}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid-2">
+        {/* Skill Radar */}
+        <div className="card">
+          <div className="card-header">
+            <div><div className="card-title">Skill Radar</div><div className="card-sub">5-area competency map</div></div>
+          </div>
+          <div className="chart-wrap" style={{height:'240px'}}><canvas ref={canvasRef} role="img" aria-label="Skill radar chart"/></div>
+        </div>
+
+        {/* Skill Breakdown */}
+        <div className="card">
+          <div className="card-header"><div className="card-title">Skill Breakdown</div></div>
+          {skillData.map(s=>(
+            <div key={s.name} className="skill-row">
+              <span className="skill-name">{s.name}</span>
+              <ProgressBar value={s.score} color={s.color}/>
+              <span className="skill-score" style={{color:s.color}}>{s.score}%</span>
+            </div>
+          ))}
+          <div style={{marginTop:'1.25rem',paddingTop:'1rem',borderTop:'1px solid var(--border)'}}>
+            <div style={{fontSize:'.8rem',color:'var(--text3)',marginBottom:'.75rem'}}>Overall faculty rating</div>
+            <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+              <Stars value={me.overallRating||0} readOnly/>
+              <span style={{fontSize:.875+'rem',fontWeight:600,color:'var(--text2)'}}>{me.overallRating||'Not rated yet'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="card" style={{marginTop:'1.25rem'}}>
+        <div className="card-header"><div className="card-title">Quick Actions</div></div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:'10px'}}>
+          {[
+            {icon:'🧠',label:'Take Aptitude Test',nav:'aptitude',color:'#EEF2FF'},
+            {icon:'💬',label:'Soft Skills Test',nav:'softskills',color:'#F3F0FF'},
+            {icon:'💻',label:'Coding Assessment',nav:'coding',color:'#D1FAE5'},
+            {icon:'📂',label:'Upload Project',nav:'submissions',color:'#FEF3C7'},
+            {icon:'🏆',label:'Add Certificate',nav:'certificates',color:'#FEE2E2'},
+            {icon:'🤖',label:'Ask AI Coach',nav:'aicoach',color:'#DBEAFE'},
+          ].map(a=>(
+            <div key={a.nav} onClick={()=>onNav(a.nav)} style={{background:a.color,borderRadius:'var(--radius)',padding:'1rem',cursor:'pointer',textAlign:'center',transition:'all .2s'}}
+              onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'}
+              onMouseLeave={e=>e.currentTarget.style.transform='none'}>
+              <div style={{fontSize:'1.5rem',marginBottom:'6px'}}>{a.icon}</div>
+              <div style={{fontSize:'.8rem',fontWeight:600,color:'var(--text)'}}>{a.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent submissions */}
+      {mySubmissions.length>0&&(
+        <div className="card" style={{marginTop:'1.25rem'}}>
+          <div className="card-header">
+            <div><div className="card-title">Recent Submissions</div><div className="card-sub">Faculty review status</div></div>
+            <button className="btn-sm btn-outline" onClick={()=>onNav('submissions')}>View All</button>
+          </div>
+          <div className="table-wrap" style={{border:'none'}}>
+            <table className="data-table">
+              <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Faculty Rating</th></tr></thead>
+              <tbody>
+                {mySubmissions.slice(0,4).map(s=>(
+                  <tr key={s.id}>
+                    <td style={{fontWeight:500}}>{s.title}</td>
+                    <td><Badge type="info">{s.type}</Badge></td>
+                    <td><Badge type={s.status==='reviewed'?'success':'warn'}>{s.status}</Badge></td>
+                    <td><Stars value={s.facultyRating} readOnly/></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── ASSESSMENT PAGES ─────────────────────────────────────────────────────────
+const AssessmentPage=({user,type})=>{
+  const showToast=useContext(ToastCtx);
+  const [started,setStarted]=useState(false);
+  const [attempts,setAttempts]=useState(()=>{
+    const a=DB.get(`attempts_${user.id}`)||{};
+    return a;
+  });
+  const configs={
+    aptitude:{title:'Aptitude Test',desc:'Logical, numerical & verbal reasoning',questions:APTITUDE_Q.slice(0,12),color:'#4F46E5',icon:'🧠',time:40,scoreKey:'aptitudeScore'},
+    softskills:{title:'Soft Skills Assessment',desc:'Communication, teamwork & professional behaviour',questions:SOFT_SKILL_Q,color:'#8B5CF6',icon:'💬',time:45,scoreKey:'softSkillsScore'},
+    coding:{title:'Coding Assessment',desc:'DSA, web, Python & CS fundamentals',questions:CODING_Q,color:'#10B981',icon:'💻',time:35,scoreKey:'codingScore'},
+  };
+  const cfg=configs[type];
+  const prevScore=attempts[type];
+
+  const handleComplete=(score)=>{
+    const users=DB.get('users')||[];
+    const idx=users.findIndex(u=>u.id===user.id);
+    if(idx>=0){
+      users[idx][cfg.scoreKey]=score;
+      DB.set('users',users);
+      DB.set('currentUser',users[idx]);
+    }
+    const att={...attempts,[type]:score};
+    DB.set(`attempts_${user.id}`,att);
+    setAttempts(att);
+    setStarted(false);
+    showToast(`${cfg.title} complete! Score: ${score}%`);
+  };
+
+  if(started) return(
+    <div>
+      <button className="btn-sm btn-outline" style={{marginBottom:'1rem'}} onClick={()=>setStarted(false)}>← Back</button>
+      <QuizEngine {...cfg} onComplete={handleComplete}/>
+    </div>
+  );
+
+  return(
+    <div style={{maxWidth:'680px',margin:'0 auto'}}>
+      <div className="card" style={{textAlign:'center',padding:'2.5rem'}}>
+        <div style={{fontSize:'3.5rem',marginBottom:'1rem'}}>{cfg.icon}</div>
+        <h2 style={{fontSize:'1.4rem',marginBottom:'.5rem'}}>{cfg.title}</h2>
+        <p style={{color:'var(--text2)',marginBottom:'1.5rem'}}>{cfg.desc}</p>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'1rem',margin:'1.5rem 0'}}>
+          {[{l:'Questions',v:cfg.questions.length},{l:'Time/Question',v:`${cfg.time}s`},{l:'Best Score',v:prevScore!==undefined?`${prevScore}%`:'Not taken'}].map(i=>(
+            <div key={i.l} style={{background:'var(--surface2)',borderRadius:'var(--radius)',padding:'1rem'}}>
+              <div style={{fontSize:'1.4rem',fontWeight:700,color:'var(--brand)'}}>{i.v}</div>
+              <div style={{fontSize:'.75rem',color:'var(--text3)'}}>{i.l}</div>
+            </div>
+          ))}
+        </div>
+        {prevScore!==undefined&&(
+          <div style={{background:'var(--accent-light)',borderRadius:'var(--radius)',padding:'1rem',marginBottom:'1.25rem',display:'flex',alignItems:'center',gap:'8px'}}>
+            <span>✓</span>
+            <span style={{fontSize:'.875rem',color:'#065f46'}}>You scored <strong>{prevScore}%</strong> on your last attempt. Retake to improve!</span>
+          </div>
+        )}
+        <div style={{background:'var(--surface2)',borderRadius:'var(--radius)',padding:'1rem',marginBottom:'1.5rem',textAlign:'left'}}>
+          <div style={{fontWeight:600,marginBottom:'.5rem',fontSize:'.9rem'}}>📋 Instructions</div>
+          <ul style={{paddingLeft:'1.25rem',color:'var(--text2)',fontSize:'.85rem',lineHeight:'1.8'}}>
+            <li>Each question has a {cfg.time}-second timer</li>
+            <li>Auto-advances when time runs out</li>
+            <li>Correct answers shown after each question</li>
+            <li>Score is saved to your profile automatically</li>
+          </ul>
+        </div>
+        <button className="btn-brand btn-sm" style={{padding:'.7rem 2.5rem',fontSize:'.95rem'}} onClick={()=>setStarted(true)}>
+          Start Assessment →
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── SUBMISSIONS PAGE ─────────────────────────────────────────────────────────
+const SubmissionsPage=({user})=>{
+  const showToast=useContext(ToastCtx);
+  const [submissions,setSubmissions]=useState(()=>DB.get('submissions')||[]);
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({title:'',type:'project',description:''});
+  const mine=submissions.filter(s=>s.studentId===user.id);
+
+  const submit=()=>{
+    if(!form.title){showToast('Add a title','error');return;}
+    const newSub={id:'sub'+Date.now(),studentId:user.id,...form,fileUrl:'doc_'+Date.now()+'.pdf',uploadedAt:new Date().toISOString().split('T')[0],facultyId:null,facultyRating:0,facultyComment:'',status:'pending',originalityScore:0};
+    const updated=[...submissions,newSub];
+    DB.set('submissions',updated);
+    setSubmissions(updated);
+    setModal(false);
+    setForm({title:'',type:'project',description:''});
+    showToast('Submission uploaded successfully!');
+  };
+
+  return(
+    <div>
+      <div className="section-header">
+        <div><div className="section-title">📂 My Submissions</div><div className="section-sub">Projects and documents submitted for faculty review</div></div>
+        <button className="btn-brand btn-sm" onClick={()=>setModal(true)}>+ Upload Submission</button>
+      </div>
+      {mine.length===0?(
+        <div style={{background:'#fff',borderRadius:'var(--radius-lg)',border:'1px solid var(--border)',padding:'3rem',textAlign:'center'}}>
+          <div style={{fontSize:'3rem',marginBottom:'1rem'}}>📂</div>
+          <h3>No submissions yet</h3>
+          <p style={{color:'var(--text3)',marginTop:'.5rem'}}>Upload your projects and documents for faculty review</p>
+        </div>
+      ):(
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead><tr><th>Title</th><th>Type</th><th>Uploaded</th><th>Status</th><th>Faculty Rating</th><th>Comment</th></tr></thead>
+            <tbody>
+              {mine.map(s=>(
+                <tr key={s.id}>
+                  <td style={{fontWeight:500}}>{s.title}<br/><span style={{fontSize:'.75rem',color:'var(--text3)'}}>{s.description}</span></td>
+                  <td><Badge type="info">{s.type}</Badge></td>
+                  <td style={{color:'var(--text3)',fontSize:'.8rem'}}>{s.uploadedAt}</td>
+                  <td><Badge type={s.status==='reviewed'?'success':'warn'}>{s.status}</Badge></td>
+                  <td>{s.facultyRating?<Stars value={s.facultyRating} readOnly/>:<span style={{color:'var(--text3)',fontSize:'.8rem'}}>Pending</span>}</td>
+                  <td style={{fontSize:'.8rem',color:'var(--text2)',maxWidth:'180px'}}>{s.facultyComment||'—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {modal&&(
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(false)}>
+          <div className="modal">
+            <div className="modal-close" onClick={()=>setModal(false)}>✕</div>
+            <div className="modal-title">Upload Submission</div>
+            <div className="modal-sub">Submit your project or document for faculty review</div>
+            <div className="form-group"><label className="form-label">Title</label><input className="form-input" placeholder="E-Commerce Web App" value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))}/></div>
+            <div className="form-group"><label className="form-label">Type</label>
+              <select className="form-select" value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))}>
+                <option value="project">Project</option>
+                <option value="report">Report</option>
+                <option value="assignment">Assignment</option>
+              </select>
+            </div>
+            <div className="form-group"><label className="form-label">Description</label><textarea className="form-input" rows={3} placeholder="Brief description of your submission..." value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))}/></div>
+            <div className="upload-area" onClick={()=>showToast('File upload simulated','warn')}>
+              <span className="upload-icon">📎</span>
+              <div className="upload-text">Click to attach file (PDF, DOC, ZIP)</div>
+              <div className="upload-sub">Max 25MB · Demo mode simulates file upload</div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-sm btn-outline" onClick={()=>setModal(false)}>Cancel</button>
+              <button className="btn-sm btn-brand" onClick={submit}>Submit</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── CERTIFICATES PAGE ────────────────────────────────────────────────────────
+const CertificatesPage=({user})=>{
+  const showToast=useContext(ToastCtx);
+  const [submissions,setSubmissions]=useState(()=>DB.get('submissions')||[]);
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({title:'',issuer:'',description:'',credentialId:''});
+  const mine=submissions.filter(s=>s.studentId===user.id&&s.type==='certificate');
+
+  const submit=()=>{
+    if(!form.title){showToast('Add certificate title','error');return;}
+    const newCert={id:'cert'+Date.now(),studentId:user.id,type:'certificate',...form,fileUrl:'cert_'+Date.now()+'.pdf',uploadedAt:new Date().toISOString().split('T')[0],facultyId:null,facultyRating:0,facultyComment:'',status:'pending',originalityScore:0};
+    const updated=[...submissions,newCert];
+    DB.set('submissions',updated);
+    setSubmissions(updated);
+    setModal(false);
+    setForm({title:'',issuer:'',description:'',credentialId:''});
+    showToast('Certificate submitted for verification!');
+  };
+
+  return(
+    <div>
+      <div className="section-header">
+        <div><div className="section-title">🏆 Certificates</div><div className="section-sub">Submit for originality verification and rating</div></div>
+        <button className="btn-brand btn-sm" onClick={()=>setModal(true)}>+ Add Certificate</button>
+      </div>
+      {mine.length===0?(
+        <div style={{background:'#fff',borderRadius:'var(--radius-lg)',border:'1px solid var(--border)',padding:'3rem',textAlign:'center'}}>
+          <div style={{fontSize:'3rem',marginBottom:'1rem'}}>🏆</div>
+          <h3>No certificates yet</h3>
+          <p style={{color:'var(--text3)',marginTop:'.5rem'}}>Add certifications from AWS, Google, Coursera, etc.</p>
+        </div>
+      ):(
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:'1rem'}}>
+          {mine.map(c=>(
+            <div key={c.id} className="card" style={{borderLeft:'4px solid var(--brand)'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'.75rem'}}>
+                <div style={{fontSize:'2rem'}}>🏅</div>
+                <Badge type={c.status==='reviewed'?'success':'warn'}>{c.status}</Badge>
+              </div>
+              <h4 style={{fontSize:'1rem',fontWeight:700,marginBottom:'.25rem'}}>{c.title}</h4>
+              <p style={{fontSize:'.8rem',color:'var(--text3)',marginBottom:'.75rem'}}>{c.issuer||'Issuing body'} · {c.uploadedAt}</p>
+              {c.credentialId&&<p style={{fontSize:'.75rem',background:'var(--surface2)',padding:'.35rem .6rem',borderRadius:'6px',fontFamily:'monospace',marginBottom:'.75rem'}}>ID: {c.credentialId}</p>}
+              {c.originalityScore>0&&<div style={{marginBottom:'.5rem'}}>
+                <div style={{fontSize:'.75rem',color:'var(--text3)',marginBottom:'4px'}}>Originality Score</div>
+                <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                  <ProgressBar value={c.originalityScore} color={c.originalityScore>=80?'var(--accent)':'var(--warn)'}/>
+                  <span style={{fontSize:'.8rem',fontWeight:700}}>{c.originalityScore}%</span>
+                </div>
+              </div>}
+              {c.facultyRating>0&&<Stars value={c.facultyRating} readOnly/>}
+              {c.facultyComment&&<p style={{fontSize:'.8rem',color:'var(--text2)',marginTop:'.5rem',fontStyle:'italic'}}>"{c.facultyComment}"</p>}
+            </div>
+          ))}
+        </div>
+      )}
+      {modal&&(
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(false)}>
+          <div className="modal">
+            <div className="modal-close" onClick={()=>setModal(false)}>✕</div>
+            <div className="modal-title">Add Certificate</div>
+            <div className="modal-sub">Submit your certificate for faculty verification</div>
+            <div className="form-group"><label className="form-label">Certificate Name</label><input className="form-input" placeholder="AWS Certified Developer" value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))}/></div>
+            <div className="form-group"><label className="form-label">Issuing Organization</label><input className="form-input" placeholder="Amazon Web Services" value={form.issuer} onChange={e=>setForm(f=>({...f,issuer:e.target.value}))}/></div>
+            <div className="form-group"><label className="form-label">Credential ID (optional)</label><input className="form-input" placeholder="ABC123XYZ" value={form.credentialId} onChange={e=>setForm(f=>({...f,credentialId:e.target.value}))}/></div>
+            <div className="form-group"><label className="form-label">Description</label><textarea className="form-input" rows={2} value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))}/></div>
+            <div className="upload-area" onClick={()=>showToast('File upload simulated','warn')}>
+              <span className="upload-icon">📎</span>
+              <div className="upload-text">Attach certificate file</div>
+              <div className="upload-sub">PDF or image · Originals preferred for verification</div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-sm btn-outline" onClick={()=>setModal(false)}>Cancel</button>
+              <button className="btn-sm btn-brand" onClick={submit}>Submit for Verification</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── CAREER ROADMAP ───────────────────────────────────────────────────────────
+const CareerRoadmapPage=({user})=>{
+  const users=DB.get('users')||[];
+  const me=users.find(u=>u.id===user.id)||user;
+  const goals=me.goals||['Software Development'];
+  const goal=goals[0]||'Software Development';
+
+  const roadmaps={
+    'Software Development':[
+      {phase:'Foundation',items:['Data Structures & Algorithms','OOP Concepts','Git & Version Control','Linux Basics'],status:'done',color:'var(--accent)'},
+      {phase:'Core Skills',items:['Full Stack Web Dev (React/Node)','Database Design (SQL/NoSQL)','REST API Development','Testing Fundamentals'],status:me.codingScore>60?'done':'active',color:'var(--brand)'},
+      {phase:'Advanced',items:['System Design','Cloud (AWS/GCP)','Docker & Kubernetes','CI/CD Pipelines'],status:me.codingScore>80?'active':'pending',color:'var(--warn)'},
+      {phase:'Placement Ready',items:['Mock Interviews','Competitive Coding','Portfolio Projects','Resume Review'],status:'pending',color:'var(--danger)'},
+    ],
+    'Data Science / AI':[
+      {phase:'Foundation',items:['Python & NumPy','Statistics & Probability','Data Wrangling (Pandas)','Data Visualization'],status:'done',color:'var(--accent)'},
+      {phase:'Core ML',items:['Supervised Learning','Unsupervised Learning','Feature Engineering','Model Evaluation'],status:'active',color:'var(--brand)'},
+      {phase:'Deep Learning',items:['Neural Networks','TensorFlow/PyTorch','NLP & Computer Vision','MLOps Basics'],status:'pending',color:'var(--warn)'},
+      {phase:'Industry Ready',items:['End-to-End Projects','Kaggle Competitions','Research Paper Reading','Deployment'],status:'pending',color:'var(--danger)'},
+    ],
+  };
+
+  const phases=roadmaps[goal]||roadmaps['Software Development'];
+  const companies={'Software Development':['Google','Microsoft','Amazon','Flipkart','Swiggy','Razorpay'],'Data Science / AI':['Google DeepMind','Netflix','Uber','Zomato','Freshworks','IBM']};
+  const targetCompanies=companies[goal]||companies['Software Development'];
+
+  return(
+    <div style={{maxWidth:'800px'}}>
+      <div className="card" style={{marginBottom:'1.25rem'}}>
+        <div className="card-header">
+          <div><div className="card-title">🗺️ Your Career Roadmap</div><div className="card-sub">Goal: {goal}</div></div>
+          <Badge type="brand">Personalized</Badge>
+        </div>
+        {phases.map((p,i)=>(
+          <div key={p.phase} className="roadmap-item">
+            <div className="roadmap-line">
+              <div className="roadmap-dot" style={{background:p.status==='done'?'var(--accent)':p.status==='active'?p.color:'var(--border2)'}}/>
+              {i<phases.length-1&&<div className="roadmap-track"/>}
+            </div>
+            <div style={{flex:1,paddingBottom:'1rem'}}>
+              <div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'.5rem'}}>
+                <h4 style={{fontSize:'.95rem',fontWeight:700}}>{p.phase}</h4>
+                <Badge type={p.status==='done'?'success':p.status==='active'?'info':'neutral'}>{p.status==='done'?'✓ Complete':p.status==='active'?'In Progress':'Upcoming'}</Badge>
+              </div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:'6px'}}>
+                {p.items.map(item=>(
+                  <span key={item} style={{background:'var(--surface2)',border:'1px solid var(--border)',borderRadius:'20px',padding:'.25rem .65rem',fontSize:'.78rem',color:'var(--text2)'}}>{item}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="card">
+        <div className="card-header"><div className="card-title">🎯 Target Companies</div></div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:'10px'}}>
+          {targetCompanies.map(c=>(
+            <div key={c} style={{background:'var(--brand-light)',border:'1px solid var(--brand)',borderRadius:'var(--radius)',padding:'.6rem 1rem',fontWeight:600,color:'var(--brand)',fontSize:'.875rem'}}>{c}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── LEADERBOARD ──────────────────────────────────────────────────────────────
+const LeaderboardPage=({user})=>{
+  const users=DB.get('users')||[];
+  const students=users.filter(u=>u.role==='student').map(s=>({
+    ...s,overall:Math.round((s.aptitudeScore+s.softSkillsScore+s.codingScore)/3),
+    readiness:Math.round((s.aptitudeScore*.25)+(s.softSkillsScore*.2)+(s.codingScore*.25)+(s.projectScore*4)+(s.certScore*4))
+  })).sort((a,b)=>b.readiness-a.readiness);
+  const [filter,setFilter]=useState('all');
+  const filtered=filter==='all'?students:students.filter(s=>s.department.toLowerCase().includes(filter));
+  const depts=[...new Set(users.filter(u=>u.role==='student').map(u=>u.department))];
+  const canvasRef=useRef(null);
+  const chartInst=useRef(null);
+  useEffect(()=>{
+    if(!canvasRef.current||students.length===0) return;
+    if(chartInst.current) chartInst.current.destroy();
+    const top5=students.slice(0,5);
+    chartInst.current=new Chart(canvasRef.current,{
+      type:'bar',
+      data:{
+        labels:top5.map(s=>s.name.split(' ')[0]),
+        datasets:[
+          {label:'Aptitude',data:top5.map(s=>s.aptitudeScore),backgroundColor:'rgba(79,70,229,.8)',borderRadius:4},
+          {label:'Soft Skills',data:top5.map(s=>s.softSkillsScore),backgroundColor:'rgba(139,92,246,.8)',borderRadius:4},
+          {label:'Coding',data:top5.map(s=>s.codingScore),backgroundColor:'rgba(16,185,129,.8)',borderRadius:4},
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:11}}}},scales:{x:{stacked:false},y:{max:100,ticks:{callback:v=>v+'%'}}}}
+    });
+    return()=>{if(chartInst.current) chartInst.current.destroy()};
+  },[students]);
+
+  return(
+    <div>
+      <div className="section-header">
+        <div><div className="section-title">📊 Leaderboard</div><div className="section-sub">Batch ranking by placement readiness</div></div>
+        <select className="form-select" style={{width:'160px',padding:'.4rem .75rem',fontSize:'.85rem'}} value={filter} onChange={e=>setFilter(e.target.value)}>
+          <option value="all">All Departments</option>
+          {depts.map(d=><option key={d} value={d.toLowerCase().split(' ')[0]}>{d}</option>)}
+        </select>
+      </div>
+      <div className="grid-2" style={{marginBottom:'1.25rem'}}>
+        <div className="card"><div className="card-header"><div className="card-title">Top 5 Comparison</div></div><div className="chart-wrap" style={{height:'220px'}}><canvas ref={canvasRef} role="img" aria-label="Top 5 students comparison bar chart"/></div></div>
+        <div className="card">
+          <div className="card-header"><div className="card-title">🏆 Top Performers</div></div>
+          {students.slice(0,3).map((s,i)=>(
+            <div key={s.id} style={{display:'flex',alignItems:'center',gap:'12px',padding:'.75rem 0',borderBottom:i<2?'1px solid var(--border)':'none'}}>
+              <div style={{fontSize:'1.5rem'}}>{['🥇','🥈','🥉'][i]}</div>
+              <Avatar name={s.name}/>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:600,fontSize:'.9rem'}}>{s.name} {s.id===user.id&&<Badge type="brand">You</Badge>}</div>
+                <div style={{fontSize:'.75rem',color:'var(--text3)'}}>{s.department} · {s.year}</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:'1.1rem',fontWeight:700,color:'var(--brand)'}}>{s.readiness}%</div>
+                <div style={{fontSize:'.7rem',color:'var(--text3)'}}>Readiness</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="table-wrap">
+        <table className="data-table">
+          <thead><tr><th>Rank</th><th>Student</th><th>Department</th><th>Aptitude</th><th>Soft Skills</th><th>Coding</th><th>Readiness</th></tr></thead>
+          <tbody>
+            {filtered.map((s,i)=>{
+              const rank=i+1;
+              const rankCls=rank===1?'gold':rank===2?'silver':rank===3?'bronze':'other';
+              return(
+                <tr key={s.id} style={s.id===user.id?{background:'var(--brand-light)'}:{}}>
+                  <td><div className={`lb-rank ${rankCls}`}>{rank}</div></td>
+                  <td>
+                    <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                      <Avatar name={s.name} size={32}/>
+                      <div>
+                        <div style={{fontWeight:600,fontSize:'.875rem'}}>{s.name} {s.id===user.id&&'(You)'}</div>
+                        <div style={{fontSize:'.72rem',color:'var(--text3)'}}>{s.usn}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{fontSize:'.85rem',color:'var(--text2)'}}>{s.department}</td>
+                  <td><div style={{display:'flex',alignItems:'center',gap:'8px'}}><ProgressBar value={s.aptitudeScore}/><span style={{fontSize:'.8rem',fontWeight:600,width:'35px'}}>{s.aptitudeScore}%</span></div></td>
+                  <td><div style={{display:'flex',alignItems:'center',gap:'8px'}}><ProgressBar value={s.softSkillsScore} color="#8B5CF6"/><span style={{fontSize:'.8rem',fontWeight:600,width:'35px'}}>{s.softSkillsScore}%</span></div></td>
+                  <td><div style={{display:'flex',alignItems:'center',gap:'8px'}}><ProgressBar value={s.codingScore} color="#10B981"/><span style={{fontSize:'.8rem',fontWeight:600,width:'35px'}}>{s.codingScore}%</span></div></td>
+                  <td><Badge type={s.readiness>=75?'success':s.readiness>=50?'warn':'danger'}>{s.readiness}%</Badge></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// ─── INTERVIEW PREP ───────────────────────────────────────────────────────────
+const InterviewPrepPage=()=>{
+  const questions=[
+    {category:'HR',difficulty:'Easy',q:'Tell me about yourself.',answer:'Structure: Present → Past → Future. Keep it 2 minutes, professional, job-relevant.'},
+    {category:'HR',difficulty:'Easy',q:'Where do you see yourself in 5 years?',answer:'Show ambition aligned with company growth. Mention skill development and leadership.'},
+    {category:'Technical',difficulty:'Medium',q:'Explain the difference between process and thread.',answer:'Process: independent execution unit with own memory space. Thread: lightweight subprocess sharing memory within a process.'},
+    {category:'Technical',difficulty:'Hard',q:'Design a URL shortener like bit.ly.',answer:'Components: API server, hash function, DB (key-value store), cache (Redis), analytics. Handle collisions with counter or random hashing.'},
+    {category:'Behavioural',difficulty:'Medium',q:'Tell me about a time you handled conflict in a team.',answer:'Use STAR method: Situation, Task, Action, Result. Focus on listening and collaborative resolution.'},
+    {category:'Coding',difficulty:'Hard',q:'What is dynamic programming? Give an example.',answer:'DP = solving complex problems by breaking into overlapping subproblems and storing results (memoization/tabulation). Example: Fibonacci, Knapsack problem.'},
+    {category:'HR',difficulty:'Easy',q:'Why do you want to join our company?',answer:'Research the company. Mention specific products, culture, growth opportunities. Align with your career goals.'},
+    {category:'Technical',difficulty:'Medium',q:'Explain REST API principles.',answer:'Stateless, client-server, cacheable, uniform interface, layered system, code-on-demand (optional). HTTP verbs: GET, POST, PUT, DELETE.'},
+  ];
+  const [active,setActive]=useState(null);
+  const [filter,setFilter]=useState('All');
+  const cats=['All','HR','Technical','Behavioural','Coding'];
+  const filtered=filter==='All'?questions:questions.filter(q=>q.category===filter);
+  return(
+    <div>
+      <div className="section-header"><div className="section-title">🎤 Interview Preparation</div></div>
+      <div className="tabs" style={{marginBottom:'1.25rem'}}>
+        {cats.map(c=><button key={c} className={`tab-btn ${filter===c?'active':''}`} onClick={()=>setFilter(c)}>{c}</button>)}
+      </div>
+      <div style={{display:'grid',gap:'10px'}}>
+        {filtered.map((q,i)=>(
+          <div key={i} className="prep-card">
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',cursor:'pointer'}} onClick={()=>setActive(active===i?null:i)}>
+              <div style={{flex:1}}>
+                <div style={{display:'flex',gap:'6px',marginBottom:'6px'}}>
+                  <span className="prep-tag" style={{background:'var(--brand-light)',color:'var(--brand)'}}>{q.category}</span>
+                  <span className="prep-tag" style={{background:q.difficulty==='Easy'?'var(--accent-light)':q.difficulty==='Medium'?'var(--warn-light)':'var(--danger-light)',color:q.difficulty==='Easy'?'#065f46':q.difficulty==='Medium'?'#92400e':'#991b1b'}}>{q.difficulty}</span>
+                </div>
+                <h4 style={{fontSize:'.95rem',fontWeight:600}}>{q.q}</h4>
+              </div>
+              <span style={{fontSize:'1.2rem',marginLeft:'1rem',flexShrink:0}}>{active===i?'▲':'▼'}</span>
+            </div>
+            {active===i&&(
+              <div style={{marginTop:'1rem',padding:'1rem',background:'var(--surface2)',borderRadius:'var(--radius)',border:'1px solid var(--border)'}}>
+                <div style={{fontSize:'.75rem',fontWeight:700,color:'var(--brand)',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:'.5rem'}}>💡 How to answer</div>
+                <p style={{fontSize:'.875rem',color:'var(--text)',lineHeight:'1.7'}}>{q.answer}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── AI COACH ─────────────────────────────────────────────────────────────────
+const AICoachPage=({user})=>{
+  const users=DB.get('users')||[];
+  const me=users.find(u=>u.id===user.id)||user;
+  const [messages,setMessages]=useState([
+    {role:'ai',text:`Hi ${me.name}! 👋 I'm your AI placement coach. Your readiness score is ${Math.round((me.aptitudeScore*.25)+(me.softSkillsScore*.2)+(me.codingScore*.25)+(me.projectScore*4)+(me.certScore*4))}%. Ask me anything about placement prep, interview tips, coding challenges, or career planning!`}
+  ]);
+  const [input,setInput]=useState('');
+  const [loading,setLoading]=useState(false);
+  const bottomRef=useRef(null);
+  useEffect(()=>bottomRef.current?.scrollIntoView({behavior:'smooth'}),[messages]);
+
+  const send=async()=>{
+    if(!input.trim()||loading) return;
+    const userMsg=input.trim();
+    setInput('');
+    setMessages(m=>[...m,{role:'user',text:userMsg}]);
+    setLoading(true);
+    try{
+      const systemPrompt=`You are an expert placement coach for an Indian engineering college student. Student profile:
+Name: ${me.name}, Department: ${me.department}, Year: ${me.year}
+Aptitude: ${me.aptitudeScore}%, Soft Skills: ${me.softSkillsScore}%, Coding: ${me.codingScore}%
+Career goal: ${(me.goals||['Software Development'])[0]}
+Give concise, actionable, India-specific placement advice. Keep responses under 150 words. Be encouraging and specific.`;
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:systemPrompt,messages:[{role:'user',content:userMsg}]})
+      });
+      const data=await resp.json();
+      const text=data.content?.[0]?.text||'Sorry, I could not get a response.';
+      setMessages(m=>[...m,{role:'ai',text}]);
+    }catch{
+      setMessages(m=>[...m,{role:'ai',text:'Network error. Please check your connection and try again.'}]);
+    }
+    setLoading(false);
+  };
+
+  const quickQ=['How to improve my aptitude score?','Top companies hiring from my field?','Best coding resources for placements','How to write a strong resume?','Mock interview tips'];
+
+  return(
+    <div style={{maxWidth:'720px'}}>
+      <div className="card" style={{marginBottom:'1rem'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+          <div style={{width:'48px',height:'48px',background:'var(--brand)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.5rem'}}>🤖</div>
+          <div>
+            <div style={{fontWeight:700,fontSize:'1rem'}}>AI Placement Coach</div>
+            <div style={{fontSize:'.8rem',color:'var(--text3)'}}>Powered by Claude · Personalized to your profile</div>
+          </div>
+          <div style={{marginLeft:'auto'}}><Badge type="success">Online</Badge></div>
+        </div>
+      </div>
+      <div className="ai-chat">
+        <div className="ai-messages">
+          {messages.map((m,i)=>(
+            <div key={i} className={`msg ${m.role}`} style={{whiteSpace:'pre-wrap'}}>{m.text}</div>
+          ))}
+          {loading&&<div className="msg ai"><span>Thinking</span><span style={{animation:'spin 1s linear infinite',display:'inline-block',marginLeft:'6px'}}>⟳</span></div>}
+          <div ref={bottomRef}/>
+        </div>
+        <div style={{padding:'.75rem 1rem',borderTop:'1px solid var(--border)'}}>
+          <div style={{display:'flex',flexWrap:'wrap',gap:'6px',marginBottom:'.75rem'}}>
+            {quickQ.map(q=>(
+              <button key={q} style={{padding:'.3rem .7rem',background:'var(--surface2)',border:'1px solid var(--border)',borderRadius:'20px',fontSize:'.75rem',cursor:'pointer',color:'var(--text2)'}} onClick={()=>{setInput(q);}}>{q}</button>
+            ))}
+          </div>
+        </div>
+        <div className="ai-input-row">
+          <input className="ai-input" placeholder="Ask your placement coach…" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()}/>
+          <button className="ai-send" onClick={send}>→</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── STUDENT PROFILE PAGE ─────────────────────────────────────────────────────
+const StudentProfilePage=({user})=>{
+  const users=DB.get('users')||[];
+  const me=users.find(u=>u.id===user.id)||user;
+  const showToast=useContext(ToastCtx);
+  const [editing,setEditing]=useState(false);
+  const [form,setForm]=useState({phone:me.phone||'',linkedin:'',github:''});
+
+  const save=()=>{
+    const updated=users.map(u=>u.id===user.id?{...u,...form}:u);
+    DB.set('users',updated);
+    showToast('Profile updated!');
+    setEditing(false);
+  };
+
+  const overall=Math.round((me.aptitudeScore+me.softSkillsScore+me.codingScore)/3);
+  const readiness=Math.round((me.aptitudeScore*.25)+(me.softSkillsScore*.2)+(me.codingScore*.25)+(me.projectScore*4)+(me.certScore*4));
+
+  return(
+    <div>
+      <div className="profile-hero">
+        <div className="profile-avatar"><Avatar name={me.name} size={72}/></div>
+        <div style={{position:'absolute',top:'1.5rem',right:'1.5rem'}}>
+          <button style={{background:'rgba(255,255,255,.15)',border:'1px solid rgba(255,255,255,.3)',color:'#fff',padding:'.45rem 1rem',borderRadius:'8px',fontSize:'.8rem',cursor:'pointer'}} onClick={()=>setEditing(!editing)}>{editing?'Cancel':'Edit Profile'}</button>
+        </div>
+        <div className="profile-name">{me.name}</div>
+        <div style={{fontSize:'.9rem',opacity:.75}}>{me.usn} · {me.department} · {me.year}</div>
+        <div className="profile-meta">
+          {[{icon:'📧',text:me.email},{icon:'📱',text:me.phone||'Add phone'},{icon:'🎓',text:me.batch},{icon:'🏢',text:me.department}].map(i=>(
+            <div key={i.text} className="profile-meta-item"><span>{i.icon}</span>{i.text}</div>
+          ))}
+        </div>
+      </div>
+      <div className="grid-2">
+        <div className="card">
+          <div className="card-header"><div className="card-title">Academic Profile</div></div>
+          {[{l:'USN',v:me.usn},{l:'Department',v:me.department},{l:'Year',v:me.year},{l:'Batch',v:me.batch},{l:'Email',v:me.email}].map(r=>(
+            <div key={r.l} style={{display:'flex',justifyContent:'space-between',padding:'.6rem 0',borderBottom:'1px solid var(--border)'}}>
+              <span style={{fontSize:'.85rem',color:'var(--text3)'}}>{r.l}</span>
+              <span style={{fontSize:'.85rem',fontWeight:500}}>{r.v||'—'}</span>
+            </div>
+          ))}
+        </div>
+        <div className="card">
+          <div className="card-header"><div className="card-title">Scores & Ratings</div></div>
+          {[
+            {l:'Aptitude',v:me.aptitudeScore+'%',c:'var(--brand)'},
+            {l:'Soft Skills',v:me.softSkillsScore+'%',c:'#8B5CF6'},
+            {l:'Coding',v:me.codingScore+'%',c:'var(--accent)'},
+            {l:'Overall',v:overall+'%',c:'var(--info)'},
+            {l:'Readiness',v:readiness+'%',c:readiness>=75?'var(--accent)':'var(--warn)'},
+          ].map(r=>(
+            <div key={r.l} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'.5rem 0',borderBottom:'1px solid var(--border)'}}>
+              <span style={{fontSize:'.85rem',color:'var(--text3)'}}>{r.l}</span>
+              <span style={{fontSize:'.9rem',fontWeight:700,color:r.c}}>{r.v}</span>
+            </div>
+          ))}
+          <div style={{paddingTop:'1rem'}}>
+            <div style={{fontSize:'.8rem',color:'var(--text3)',marginBottom:'6px'}}>Faculty Rating</div>
+            <Stars value={me.overallRating||0} readOnly/>
+          </div>
+        </div>
+      </div>
+      {editing&&(
+        <div className="card" style={{marginTop:'1.25rem'}}>
+          <div className="card-header"><div className="card-title">Edit Profile</div></div>
+          <div className="grid-2">
+            <div className="form-group"><label className="form-label">Phone</label><input className="form-input" value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))}/></div>
+            <div className="form-group"><label className="form-label">LinkedIn URL</label><input className="form-input" placeholder="linkedin.com/in/yourname" value={form.linkedin} onChange={e=>setForm(f=>({...f,linkedin:e.target.value}))}/></div>
+            <div className="form-group"><label className="form-label">GitHub URL</label><input className="form-input" placeholder="github.com/yourname" value={form.github} onChange={e=>setForm(f=>({...f,github:e.target.value}))}/></div>
+          </div>
+          <div style={{display:'flex',gap:'10px',marginTop:'.5rem'}}>
+            <button className="btn-sm btn-brand" onClick={save}>Save Changes</button>
+            <button className="btn-sm btn-outline" onClick={()=>setEditing(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── FACULTY DASHBOARD ────────────────────────────────────────────────────────
+const FacultyDashboard=()=>{
+  const users=DB.get('users')||[];
+  const submissions=DB.get('submissions')||[];
+  const students=users.filter(u=>u.role==='student');
+  const pending=submissions.filter(s=>s.status==='pending').length;
+  const reviewed=submissions.filter(s=>s.status==='reviewed').length;
+  const canvasRef=useRef(null);
+  const chartInst=useRef(null);
+  useEffect(()=>{
+    if(!canvasRef.current) return;
+    if(chartInst.current) chartInst.current.destroy();
+    const depts=[...new Set(students.map(s=>s.department))];
+    const deptData=depts.map(d=>{
+      const dep=students.filter(s=>s.department===d);
+      return Math.round(dep.reduce((a,s)=>a+Math.round((s.aptitudeScore+s.softSkillsScore+s.codingScore)/3),0)/(dep.length||1));
+    });
+    chartInst.current=new Chart(canvasRef.current,{
+      type:'bar',data:{labels:depts,datasets:[{label:'Avg Score',data:deptData,backgroundColor:'rgba(79,70,229,.8)',borderRadius:6}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{max:100,ticks:{callback:v=>v+'%'}}}}
+    });
+    return()=>{if(chartInst.current) chartInst.current.destroy()};
+  },[]);
+
+  return(
+    <div>
+      <div className="stat-grid">
+        {[
+          {label:'My Students',value:students.length,icon:'👥',color:'#EEF2FF'},
+          {label:'Pending Reviews',value:pending,icon:'📋',color:'#FEF3C7'},
+          {label:'Completed Reviews',value:reviewed,icon:'✅',color:'#D1FAE5'},
+          {label:'Avg Readiness',value:Math.round(students.reduce((a,s)=>a+Math.round((s.aptitudeScore*.25)+(s.softSkillsScore*.2)+(s.codingScore*.25)),0)/(students.length||1))+'%',icon:'🎯',color:'#DBEAFE'},
+        ].map(s=>(
+          <div key={s.label} className="stat-card">
+            <div className="stat-icon" style={{background:s.color,fontSize:'1.5rem'}}>{s.icon}</div>
+            <div className="stat-body"><div className="stat-label">{s.label}</div><div className="stat-value">{s.value}</div></div>
+          </div>
+        ))}
+      </div>
+      <div className="grid-2">
+        <div className="card">
+          <div className="card-header"><div className="card-title">Department Performance</div></div>
+          <div className="chart-wrap" style={{height:'220px'}}><canvas ref={canvasRef} role="img" aria-label="Department performance chart"/></div>
+        </div>
+        <div className="card">
+          <div className="card-header"><div className="card-title">Recent Submissions</div></div>
+          {submissions.slice(0,5).map(s=>{
+            const student=users.find(u=>u.id===s.studentId);
+            return(
+              <div key={s.id} style={{display:'flex',alignItems:'center',gap:'10px',padding:'.6rem 0',borderBottom:'1px solid var(--border)'}}>
+                <Avatar name={student?.name||'?'} size={32}/>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:'.875rem',fontWeight:500}}>{s.title}</div>
+                  <div style={{fontSize:'.75rem',color:'var(--text3)'}}>{student?.name} · {s.type}</div>
+                </div>
+                <Badge type={s.status==='reviewed'?'success':'warn'}>{s.status}</Badge>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── FACULTY REVIEW PAGE ──────────────────────────────────────────────────────
+const FacultyReviewPage=({facultyUser})=>{
+  const showToast=useContext(ToastCtx);
+  const [submissions,setSubmissions]=useState(()=>DB.get('submissions')||[]);
+  const [users]=useState(()=>DB.get('users')||[]);
+  const [rating,setRating]=useState({});
+  const [comment,setComment]=useState({});
+  const [filter,setFilter]=useState('pending');
+
+  const filtered=submissions.filter(s=>filter==='all'?true:s.status===filter);
+
+  const submitReview=(subId)=>{
+    const r=rating[subId]||0;
+    const c=comment[subId]||'';
+    if(!r){showToast('Please give a star rating','error');return;}
+    const updated=submissions.map(s=>s.id===subId?{...s,facultyId:facultyUser.id,facultyRating:r,facultyComment:c,status:'reviewed',originalityScore:Math.floor(Math.random()*30)+70}:s);
+    DB.set('submissions',updated);
+    setSubmissions(updated);
+    // update student score
+    const sub=submissions.find(s=>s.id===subId);
+    if(sub){
+      const studentUsers=DB.get('users')||[];
+      const idx=studentUsers.findIndex(u=>u.id===sub.studentId);
+      if(idx>=0){
+        if(sub.type==='project') studentUsers[idx].projectScore=Math.max(studentUsers[idx].projectScore,r);
+        if(sub.type==='certificate') studentUsers[idx].certScore=Math.max(studentUsers[idx].certScore,r);
+        DB.set('users',studentUsers);
+      }
+    }
+    showToast('Review submitted and scores updated!');
+  };
+
+  return(
+    <div>
+      <div className="section-header">
+        <div><div className="section-title">📋 Review Submissions</div></div>
+        <div className="tabs" style={{margin:0,width:'auto',flex:'unset'}}>
+          {['pending','reviewed','all'].map(f=><button key={f} className={`tab-btn ${filter===f?'active':''}`} onClick={()=>setFilter(f)} style={{textTransform:'capitalize'}}>{f}</button>)}
+        </div>
+      </div>
+      {filtered.length===0?<div className="card" style={{textAlign:'center',padding:'3rem'}}><div style={{fontSize:'3rem',marginBottom:'1rem'}}>✅</div><h3>All caught up!</h3><p style={{color:'var(--text3)'}}>No {filter} submissions</p></div>:(
+        <div style={{display:'grid',gap:'1rem'}}>
+          {filtered.map(s=>{
+            const student=users.find(u=>u.id===s.studentId);
+            return(
+              <div key={s.id} className="card">
+                <div style={{display:'flex',alignItems:'flex-start',gap:'12px',marginBottom:'1rem'}}>
+                  <Avatar name={student?.name||'?'} size={44}/>
+                  <div style={{flex:1}}>
+                    <div style={{display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'}}>
+                      <h4 style={{fontWeight:700}}>{s.title}</h4>
+                      <Badge type="info">{s.type}</Badge>
+                      <Badge type={s.status==='reviewed'?'success':'warn'}>{s.status}</Badge>
+                    </div>
+                    <div style={{fontSize:'.85rem',color:'var(--text2)',marginTop:'2px'}}>{student?.name} · {student?.department} · {student?.year}</div>
+                    <div style={{fontSize:'.8rem',color:'var(--text3)',marginTop:'4px'}}>{s.description}</div>
+                  </div>
+                  <div style={{fontSize:'.78rem',color:'var(--text3)',textAlign:'right',flexShrink:0}}>📅 {s.uploadedAt}</div>
+                </div>
+                {s.status==='pending'?(
+                  <div style={{background:'var(--surface2)',borderRadius:'var(--radius)',padding:'1rem',borderTop:'1px solid var(--border)'}}>
+                    <div style={{marginBottom:'1rem'}}>
+                      <div style={{fontSize:'.8rem',fontWeight:600,marginBottom:'6px',color:'var(--text2)'}}>Your Rating</div>
+                      <Stars value={rating[s.id]||0} onChange={v=>setRating(r=>({...r,[s.id]:v}))}/>
+                    </div>
+                    <div className="form-group" style={{marginBottom:'.75rem'}}>
+                      <label className="form-label">Feedback Comment</label>
+                      <textarea className="form-input" rows={2} placeholder="Add specific feedback for the student…" value={comment[s.id]||''} onChange={e=>setComment(c=>({...c,[s.id]:e.target.value}))}/>
+                    </div>
+                    <button className="btn-success btn-sm" onClick={()=>submitReview(s.id)}>Submit Review</button>
+                  </div>
+                ):(
+                  <div style={{borderTop:'1px solid var(--border)',paddingTop:'1rem',display:'flex',alignItems:'center',gap:'12px'}}>
+                    <Stars value={s.facultyRating} readOnly/>
+                    <span style={{fontSize:'.875rem',color:'var(--text2)',fontStyle:'italic'}}>"{s.facultyComment}"</span>
+                    {s.originalityScore>0&&<Badge type={s.originalityScore>=80?'success':'warn'}>Originality: {s.originalityScore}%</Badge>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── FACULTY RATING PAGE ──────────────────────────────────────────────────────
+const FacultyRatingPage=({facultyUser})=>{
+  const showToast=useContext(ToastCtx);
+  const [users,setUsers]=useState(()=>DB.get('users')||[]);
+  const [ratings,setRatings]=useState({});
+  const [comments,setComments]=useState({});
+  const students=users.filter(u=>u.role==='student');
+
+  const submitRating=(studentId)=>{
+    const r=ratings[studentId];
+    if(!r){showToast('Select a rating','error');return;}
+    const updated=users.map(u=>u.id===studentId?{...u,overallRating:r,facultyComment:comments[studentId]||''}:u);
+    DB.set('users',updated);
+    setUsers(updated);
+    showToast('Student rating saved!');
+  };
+
+  return(
+    <div>
+      <div className="section-header"><div className="section-title">⭐ Rate Students</div><div style={{fontSize:'.875rem',color:'var(--text2)'}}>Provide overall placement readiness ratings</div></div>
+      <div style={{display:'grid',gap:'1rem'}}>
+        {students.map(s=>(
+          <div key={s.id} className="card">
+            <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'1rem'}}>
+              <Avatar name={s.name} size={44}/>
+              <div style={{flex:1}}>
+                <h4>{s.name}</h4>
+                <div style={{fontSize:'.8rem',color:'var(--text3)'}}>{s.usn} · {s.department} · {s.year}</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                {s.overallRating>0?<div><Stars value={s.overallRating} readOnly/><div style={{fontSize:'.72rem',color:'var(--text3)'}}>Current rating</div></div>:<Badge type="warn">Not rated</Badge>}
+              </div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px',marginBottom:'1rem',padding:'.75rem',background:'var(--surface2)',borderRadius:'var(--radius)'}}>
+              {[{l:'Aptitude',v:s.aptitudeScore,c:'var(--brand)'},{l:'Soft Skills',v:s.softSkillsScore,c:'#8B5CF6'},{l:'Coding',v:s.codingScore,c:'var(--accent)'}].map(m=>(
+                <div key={m.l} style={{textAlign:'center'}}>
+                  <div style={{fontSize:'1.1rem',fontWeight:700,color:m.c}}>{m.v}%</div>
+                  <div style={{fontSize:'.72rem',color:'var(--text3)'}}>{m.l}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{display:'flex',gap:'12px',alignItems:'flex-end',flexWrap:'wrap'}}>
+              <div>
+                <div style={{fontSize:'.8rem',fontWeight:600,marginBottom:'6px',color:'var(--text2)'}}>Overall Rating</div>
+                <Stars value={ratings[s.id]||s.overallRating||0} onChange={v=>setRatings(r=>({...r,[s.id]:v}))}/>
+              </div>
+              <div style={{flex:1,minWidth:'200px'}}>
+                <label className="form-label" style={{marginBottom:'4px'}}>Comment (optional)</label>
+                <input className="form-input" style={{padding:'.45rem .75rem'}} placeholder="Feedback…" value={comments[s.id]||s.facultyComment||''} onChange={e=>setComments(c=>({...c,[s.id]:e.target.value}))}/>
+              </div>
+              <button className="btn-brand btn-sm" onClick={()=>submitRating(s.id)}>Save Rating</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── FACULTY STUDENTS ─────────────────────────────────────────────────────────
+const FacultyStudentsPage=()=>{
+  const users=DB.get('users')||[];
+  const students=users.filter(u=>u.role==='student');
+  const [search,setSearch]=useState('');
+  const filtered=students.filter(s=>s.name.toLowerCase().includes(search.toLowerCase())||s.usn.toLowerCase().includes(search.toLowerCase()));
+  return(
+    <div>
+      <div className="section-header">
+        <div><div className="section-title">👥 Students</div></div>
+        <input className="form-input" style={{width:'220px',padding:'.45rem .875rem'}} placeholder="Search by name or USN…" value={search} onChange={e=>setSearch(e.target.value)}/>
+      </div>
+      <div className="table-wrap">
+        <table className="data-table">
+          <thead><tr><th>Student</th><th>USN</th><th>Year</th><th>Aptitude</th><th>Soft Skills</th><th>Coding</th><th>Readiness</th><th>Status</th></tr></thead>
+          <tbody>
+            {filtered.map(s=>{
+              const readiness=Math.round((s.aptitudeScore*.25)+(s.softSkillsScore*.2)+(s.codingScore*.25)+(s.projectScore*4)+(s.certScore*4));
+              return(
+                <tr key={s.id}>
+                  <td><div style={{display:'flex',alignItems:'center',gap:'8px'}}><Avatar name={s.name} size={32}/><div><div style={{fontWeight:500,fontSize:'.875rem'}}>{s.name}</div><div style={{fontSize:'.72rem',color:'var(--text3)'}}>{s.email}</div></div></div></td>
+                  <td style={{fontSize:'.8rem',fontFamily:'monospace'}}>{s.usn}</td>
+                  <td style={{fontSize:'.85rem'}}>{s.year}</td>
+                  <td><div style={{display:'flex',alignItems:'center',gap:'6px'}}><ProgressBar value={s.aptitudeScore}/><span style={{fontSize:'.8rem',fontWeight:600,width:'32px'}}>{s.aptitudeScore}%</span></div></td>
+                  <td><div style={{display:'flex',alignItems:'center',gap:'6px'}}><ProgressBar value={s.softSkillsScore} color="#8B5CF6"/><span style={{fontSize:'.8rem',fontWeight:600,width:'32px'}}>{s.softSkillsScore}%</span></div></td>
+                  <td><div style={{display:'flex',alignItems:'center',gap:'6px'}}><ProgressBar value={s.codingScore} color="#10B981"/><span style={{fontSize:'.8rem',fontWeight:600,width:'32px'}}>{s.codingScore}%</span></div></td>
+                  <td><Badge type={readiness>=75?'success':readiness>=50?'warn':'danger'}>{readiness}%</Badge></td>
+                  <td><Badge type={s.onboardingDone?'success':'warn'}>{s.onboardingDone?'Active':'Pending'}</Badge></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// ─── FACULTY ANALYTICS ────────────────────────────────────────────────────────
+const FacultyAnalyticsPage=()=>{
+  const users=DB.get('users')||[];
+  const students=users.filter(u=>u.role==='student');
+  const canvasRef=useRef(null);
+  const pieRef=useRef(null);
+  const chart1=useRef(null);
+  const chart2=useRef(null);
+  useEffect(()=>{
+    if(canvasRef.current){
+      if(chart1.current) chart1.current.destroy();
+      const ranges=[{label:'0-40%',count:0},{label:'41-60%',count:0},{label:'61-80%',count:0},{label:'81-100%',count:0}];
+      students.forEach(s=>{
+        const o=Math.round((s.aptitudeScore+s.softSkillsScore+s.codingScore)/3);
+        if(o<=40) ranges[0].count++;
+        else if(o<=60) ranges[1].count++;
+        else if(o<=80) ranges[2].count++;
+        else ranges[3].count++;
+      });
+      chart1.current=new Chart(canvasRef.current,{
+        type:'bar',data:{labels:ranges.map(r=>r.label),datasets:[{label:'Students',data:ranges.map(r=>r.count),backgroundColor:['rgba(239,68,68,.8)','rgba(245,158,11,.8)','rgba(79,70,229,.8)','rgba(16,185,129,.8)'],borderRadius:6}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+      });
+    }
+    if(pieRef.current){
+      if(chart2.current) chart2.current.destroy();
+      const depts=[...new Set(students.map(s=>s.department))];
+      chart2.current=new Chart(pieRef.current,{
+        type:'doughnut',data:{labels:depts,datasets:[{data:depts.map(d=>students.filter(s=>s.department===d).length),backgroundColor:['rgba(79,70,229,.8)','rgba(16,185,129,.8)','rgba(245,158,11,.8)','rgba(239,68,68,.8)','rgba(139,92,246,.8)']}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}
+      });
+    }
+    return()=>{[chart1,chart2].forEach(c=>{if(c.current) c.current.destroy()})};
+  },[]);
+
+  const avgApt=Math.round(students.reduce((a,s)=>a+s.aptitudeScore,0)/(students.length||1));
+  const avgSS=Math.round(students.reduce((a,s)=>a+s.softSkillsScore,0)/(students.length||1));
+  const avgCoding=Math.round(students.reduce((a,s)=>a+s.codingScore,0)/(students.length||1));
+  const ready=students.filter(s=>Math.round((s.aptitudeScore*.25)+(s.softSkillsScore*.2)+(s.codingScore*.25)+(s.projectScore*4)+(s.certScore*4))>=75).length;
+
+  return(
+    <div>
+      <div className="stat-grid">
+        {[
+          {label:'Avg Aptitude',value:avgApt+'%',icon:'🧠',color:'#EEF2FF'},
+          {label:'Avg Soft Skills',value:avgSS+'%',icon:'💬',color:'#F3F0FF'},
+          {label:'Avg Coding',value:avgCoding+'%',icon:'💻',color:'#D1FAE5'},
+          {label:'Placement Ready',value:`${ready}/${students.length}`,icon:'🎯',color:'#FEF3C7'},
+        ].map(s=>(
+          <div key={s.label} className="stat-card">
+            <div className="stat-icon" style={{background:s.color,fontSize:'1.5rem'}}>{s.icon}</div>
+            <div className="stat-body"><div className="stat-label">{s.label}</div><div className="stat-value">{s.value}</div></div>
+          </div>
+        ))}
+      </div>
+      <div className="grid-2">
+        <div className="card"><div className="card-header"><div className="card-title">Score Distribution</div></div><div className="chart-wrap" style={{height:'220px'}}><canvas ref={canvasRef} role="img" aria-label="Score distribution histogram"/></div></div>
+        <div className="card"><div className="card-header"><div className="card-title">Department Breakdown</div></div><div className="chart-wrap" style={{height:'220px'}}><canvas ref={pieRef} role="img" aria-label="Department breakdown pie chart"/></div></div>
+      </div>
+    </div>
+  );
+};
+
+// ─── ADMIN DASHBOARD ──────────────────────────────────────────────────────────
+const AdminDashboard=()=>{
+  const users=DB.get('users')||[];
+  const students=users.filter(u=>u.role==='student');
+  const faculty=users.filter(u=>u.role==='faculty');
+  const submissions=DB.get('submissions')||[];
+  const readyCount=students.filter(s=>Math.round((s.aptitudeScore*.25)+(s.softSkillsScore*.2)+(s.codingScore*.25)+(s.projectScore*4)+(s.certScore*4))>=75).length;
+  const canvasRef=useRef(null);
+  const chartInst=useRef(null);
+  useEffect(()=>{
+    if(!canvasRef.current) return;
+    if(chartInst.current) chartInst.current.destroy();
+    chartInst.current=new Chart(canvasRef.current,{
+      type:'line',
+      data:{
+        labels:['Jan','Feb','Mar','Apr','May','Jun'],
+        datasets:[
+          {label:'Students',data:[5,8,12,18,22,students.length],borderColor:'#4F46E5',tension:.4,fill:false,pointBackgroundColor:'#4F46E5'},
+          {label:'Submissions',data:[2,5,9,14,19,submissions.length],borderColor:'#10B981',tension:.4,fill:false,pointBackgroundColor:'#10B981'},
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}}}
+    });
+    return()=>{if(chartInst.current) chartInst.current.destroy()};
+  },[]);
+
+  return(
+    <div>
+      <div className="stat-grid">
+        {[
+          {label:'Total Students',value:students.length,icon:'🎓',color:'#EEF2FF'},
+          {label:'Faculty Members',value:faculty.length,icon:'👩‍🏫',color:'#F3F0FF'},
+          {label:'Total Submissions',value:submissions.length,icon:'📂',color:'#D1FAE5'},
+          {label:'Placement Ready',value:readyCount,icon:'🎯',color:'#FEF3C7'},
+        ].map(s=>(
+          <div key={s.label} className="stat-card">
+            <div className="stat-icon" style={{background:s.color,fontSize:'1.5rem'}}>{s.icon}</div>
+            <div className="stat-body"><div className="stat-label">{s.label}</div><div className="stat-value">{s.value}</div></div>
+          </div>
+        ))}
+      </div>
+      <div className="grid-2">
+        <div className="card" style={{gridColumn:'1/-1'}}>
+          <div className="card-header"><div className="card-title">Platform Growth</div></div>
+          <div className="chart-wrap" style={{height:'220px'}}><canvas ref={canvasRef} role="img" aria-label="Platform growth line chart"/></div>
+        </div>
+      </div>
+      <div className="card" style={{marginTop:'1.25rem'}}>
+        <div className="card-header"><div className="card-title">Recent Activity</div></div>
+        {[...students.slice(0,3).map(s=>({text:`${s.name} joined as student`,time:s.createdAt,icon:'🎓'})),...submissions.slice(0,2).map(s=>{const st=users.find(u=>u.id===s.studentId);return{text:`${st?.name} submitted "${s.title}"`,time:s.uploadedAt,icon:'📂'}})].sort((a,b)=>b.time.localeCompare(a.time)).slice(0,5).map((item,i)=>(
+          <div key={i} className="notif-item">
+            <span style={{fontSize:'1.1rem'}}>{item.icon}</span>
+            <div style={{flex:1}}><div style={{fontSize:'.875rem'}}>{item.text}</div><div className="notif-time">{item.time}</div></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── ADMIN USER MANAGEMENT ────────────────────────────────────────────────────
+const AdminUserManagement=()=>{
+  const showToast=useContext(ToastCtx);
+  const [users,setUsers]=useState(()=>DB.get('users')||[]);
+  const [search,setSearch]=useState('');
+  const [filter,setFilter]=useState('all');
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({name:'',email:'',role:'student',department:'Computer Science',password:'temp123'});
+
+  const filtered=users.filter(u=>{
+    const matchRole=filter==='all'||u.role===filter;
+    const matchSearch=u.name.toLowerCase().includes(search.toLowerCase())||u.email.toLowerCase().includes(search.toLowerCase());
+    return matchRole&&matchSearch;
+  });
+
+  const addUser=()=>{
+    if(!form.name||!form.email){showToast('Fill required fields','error');return;}
+    const newUser={id:`${form.role[0]}${Date.now()}`,onboardingDone:false,aptitudeScore:0,softSkillsScore:0,codingScore:0,projectScore:0,certScore:0,overallRating:0,createdAt:new Date().toISOString().split('T')[0],...form};
+    const updated=[...users,newUser];
+    DB.set('users',updated);
+    setUsers(updated);
+    setModal(false);
+    setForm({name:'',email:'',role:'student',department:'Computer Science',password:'temp123'});
+    showToast('User added successfully!');
+  };
+
+  const deleteUser=(id)=>{
+    const updated=users.filter(u=>u.id!==id);
+    DB.set('users',updated);
+    setUsers(updated);
+    showToast('User removed');
+  };
+
+  return(
+    <div>
+      <div className="section-header">
+        <div><div className="section-title">👥 User Management</div></div>
+        <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
+          <input className="form-input" style={{width:'200px',padding:'.4rem .75rem'}} placeholder="Search users…" value={search} onChange={e=>setSearch(e.target.value)}/>
+          <select className="form-select" style={{width:'130px',padding:'.4rem .75rem',fontSize:'.85rem'}} value={filter} onChange={e=>setFilter(e.target.value)}>
+            <option value="all">All Roles</option>
+            <option value="student">Students</option>
+            <option value="faculty">Faculty</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button className="btn-brand btn-sm" onClick={()=>setModal(true)}>+ Add User</button>
+        </div>
+      </div>
+      <div className="table-wrap">
+        <table className="data-table">
+          <thead><tr><th>User</th><th>Role</th><th>Department</th><th>Joined</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            {filtered.map(u=>(
+              <tr key={u.id}>
+                <td><div style={{display:'flex',alignItems:'center',gap:'8px'}}><Avatar name={u.name} size={32}/><div><div style={{fontWeight:500,fontSize:'.875rem'}}>{u.name}</div><div style={{fontSize:'.72rem',color:'var(--text3)'}}>{u.email}</div></div></div></td>
+                <td><Badge type={u.role==='admin'?'danger':u.role==='faculty'?'brand':'neutral'}>{u.role}</Badge></td>
+                <td style={{fontSize:'.85rem',color:'var(--text2)'}}>{u.department||'—'}</td>
+                <td style={{fontSize:'.8rem',color:'var(--text3)'}}>{u.createdAt}</td>
+                <td><Badge type={u.onboardingDone?'success':'warn'}>{u.onboardingDone||u.role!=='student'?'Active':'Pending'}</Badge></td>
+                <td>
+                  {u.role!=='admin'&&<button className="btn-sm btn-danger-outline" onClick={()=>deleteUser(u.id)}>Remove</button>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {modal&&(
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(false)}>
+          <div className="modal">
+            <div className="modal-close" onClick={()=>setModal(false)}>✕</div>
+            <div className="modal-title">Add New User</div>
+            <div className="form-group"><label className="form-label">Full Name</label><input className="form-input" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div>
+            <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))}/></div>
+            <div className="form-group"><label className="form-label">Role</label>
+              <select className="form-select" value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))}>
+                <option value="student">Student</option><option value="faculty">Faculty</option><option value="admin">Admin</option>
+              </select>
+            </div>
+            <div className="form-group"><label className="form-label">Department</label>
+              <select className="form-select" value={form.department} onChange={e=>setForm(f=>({...f,department:e.target.value}))}>
+                {['Computer Science','Information Technology','Electronics','Mechanical','Civil'].map(d=><option key={d}>{d}</option>)}
+              </select>
+            </div>
+            <div className="form-group"><label className="form-label">Temp Password</label><input className="form-input" value={form.password} onChange={e=>setForm(f=>({...f,password:e.target.value}))}/></div>
+            <div className="modal-footer">
+              <button className="btn-sm btn-outline" onClick={()=>setModal(false)}>Cancel</button>
+              <button className="btn-sm btn-brand" onClick={addUser}>Add User</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── ADMIN PLACEMENT TRACKING ─────────────────────────────────────────────────
+const AdminPlacementsPage=()=>{
+  const showToast=useContext(ToastCtx);
+  const [placements,setPlacements]=useState(()=>DB.get('placements')||[
+    {id:'p1',studentId:'s2',company:'Microsoft',role:'SDE-1',package:'18 LPA',status:'offered',date:'2024-05-15'},
+    {id:'p2',studentId:'s1',company:'Infosys',role:'Systems Engineer',package:'6.5 LPA',status:'offered',date:'2024-05-20'},
+  ]);
+  const users=DB.get('users')||[];
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({studentId:'',company:'',role:'',package:'',status:'offered'});
+
+  const add=()=>{
+    if(!form.studentId||!form.company){showToast('Fill required fields','error');return;}
+    const np={id:'p'+Date.now(),...form,date:new Date().toISOString().split('T')[0]};
+    const updated=[...placements,np];
+    DB.set('placements',updated);
+    setPlacements(updated);
+    setModal(false);
+    showToast('Placement record added!');
+  };
+
+  const students=users.filter(u=>u.role==='student');
+  const totalPkg=placements.reduce((a,p)=>a+parseFloat(p.package)||0,0);
+
+  return(
+    <div>
+      <div className="stat-grid">
+        {[
+          {label:'Total Placements',value:placements.length,icon:'💼',color:'#EEF2FF'},
+          {label:'Placement %',value:Math.round((placements.length/students.length)*100)+'%',icon:'📊',color:'#D1FAE5'},
+          {label:'Avg Package',value:placements.length?Math.round(totalPkg/placements.length)+' LPA':'N/A',icon:'💰',color:'#FEF3C7'},
+        ].map(s=>(
+          <div key={s.label} className="stat-card">
+            <div className="stat-icon" style={{background:s.color,fontSize:'1.5rem'}}>{s.icon}</div>
+            <div className="stat-body"><div className="stat-label">{s.label}</div><div className="stat-value">{s.value}</div></div>
+          </div>
+        ))}
+      </div>
+      <div className="section-header" style={{marginTop:'1.5rem'}}>
+        <div className="section-title">Placement Records</div>
+        <button className="btn-brand btn-sm" onClick={()=>setModal(true)}>+ Add Record</button>
+      </div>
+      <div className="table-wrap">
+        <table className="data-table">
+          <thead><tr><th>Student</th><th>Company</th><th>Role</th><th>Package</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody>
+            {placements.map(p=>{
+              const student=users.find(u=>u.id===p.studentId);
+              return(
+                <tr key={p.id}>
+                  <td><div style={{display:'flex',alignItems:'center',gap:'8px'}}><Avatar name={student?.name||'?'} size={30}/><span style={{fontWeight:500,fontSize:'.875rem'}}>{student?.name||'Unknown'}</span></div></td>
+                  <td style={{fontWeight:600}}>{p.company}</td>
+                  <td style={{fontSize:'.85rem',color:'var(--text2)'}}>{p.role}</td>
+                  <td><Badge type="success">{p.package}</Badge></td>
+                  <td style={{fontSize:'.8rem',color:'var(--text3)'}}>{p.date}</td>
+                  <td><Badge type="success">{p.status}</Badge></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {modal&&(
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(false)}>
+          <div className="modal">
+            <div className="modal-close" onClick={()=>setModal(false)}>✕</div>
+            <div className="modal-title">Add Placement Record</div>
+            <div className="form-group"><label className="form-label">Student</label>
+              <select className="form-select" value={form.studentId} onChange={e=>setForm(f=>({...f,studentId:e.target.value}))}>
+                <option value="">Select student…</option>
+                {students.map(s=><option key={s.id} value={s.id}>{s.name} — {s.usn}</option>)}
+              </select>
+            </div>
+            <div className="form-group"><label className="form-label">Company</label><input className="form-input" placeholder="Google, Microsoft…" value={form.company} onChange={e=>setForm(f=>({...f,company:e.target.value}))}/></div>
+            <div className="form-group"><label className="form-label">Role</label><input className="form-input" placeholder="Software Engineer" value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))}/></div>
+            <div className="form-group"><label className="form-label">Package</label><input className="form-input" placeholder="12 LPA" value={form.package} onChange={e=>setForm(f=>({...f,package:e.target.value}))}/></div>
+            <div className="modal-footer">
+              <button className="btn-sm btn-outline" onClick={()=>setModal(false)}>Cancel</button>
+              <button className="btn-sm btn-brand" onClick={add}>Add Record</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
+const NotificationsPanel=({user,onClose})=>{
+  const [notifs,setNotifs]=useState(()=>(DB.get('notifications')||[]).filter(n=>n.userId===user.id));
+  const markAll=()=>{
+    const all=DB.get('notifications')||[];
+    const updated=all.map(n=>n.userId===user.id?{...n,read:true}:n);
+    DB.set('notifications',updated);
+    setNotifs(updated.filter(n=>n.userId===user.id));
+  };
+  return(
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal" style={{maxWidth:'420px',padding:0,overflow:'hidden'}}>
+        <div style={{padding:'1.25rem 1.5rem',borderBottom:'1px solid var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <h3 style={{fontWeight:700}}>Notifications</h3>
+          <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+            <button className="btn-sm btn-outline" style={{fontSize:'.75rem'}} onClick={markAll}>Mark all read</button>
+            <div className="modal-close" style={{position:'static'}} onClick={onClose}>✕</div>
+          </div>
+        </div>
+        {notifs.length===0?<div style={{padding:'3rem',textAlign:'center',color:'var(--text3)'}}>No notifications</div>:(
+          notifs.map(n=>(
+            <div key={n.id} className={`notif-item ${!n.read?'unread':''}`}>
+              {!n.read&&<div className="notif-dot-small"/>}
+              {n.read&&<div style={{width:'8px'}}/>}
+              <div style={{flex:1}}>
+                <div style={{fontSize:'.875rem',fontWeight:n.read?400:600}}>{n.title}</div>
+                <div style={{fontSize:'.8rem',color:'var(--text2)',marginTop:'2px'}}>{n.message}</div>
+                <div className="notif-time">{n.createdAt}</div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── GOAL SETTING PAGE ────────────────────────────────────────────────────────
+const GoalsPage=({user})=>{
+  const users=DB.get('users')||[];
+  const me=users.find(u=>u.id===user.id)||user;
+  const goals=me.goals||[];
+  return(
+    <div style={{maxWidth:'680px'}}>
+      {goals.length>0?(
+        <div>
+          <div className="card" style={{marginBottom:'1.25rem'}}>
+            <div className="card-header"><div className="card-title">🎯 Your Career Goals</div><Badge type="success">Set</Badge></div>
+            {GOAL_Q.map((q,i)=>(
+              <div key={i} style={{padding:'.75rem 0',borderBottom:i<GOAL_Q.length-1?'1px solid var(--border)':'none'}}>
+                <div style={{fontSize:'.8rem',color:'var(--text3)',marginBottom:'4px'}}>{q.q}</div>
+                <div style={{fontWeight:600,color:'var(--brand)',fontSize:'.9rem'}}>{goals[i]||'Not set'}</div>
+              </div>
+            ))}
+          </div>
+          <div className="card">
+            <div className="card-header"><div className="card-title">AI-Generated Insight</div></div>
+            <div style={{background:'var(--brand-light)',borderRadius:'var(--radius)',padding:'1rem',border:'1px solid var(--brand)',borderLeftWidth:'4px'}}>
+              <p style={{fontSize:'.875rem',lineHeight:'1.7',color:'var(--text)'}}>
+                Based on your goals to pursue <strong>{goals[0]}</strong>, you should focus on building projects with modern tech stacks. Your coding score of {me.codingScore}% indicates solid foundation — pushing it above 80% will unlock top-tier company applications.
+              </p>
+            </div>
+          </div>
+        </div>
+      ):(
+        <div className="card" style={{textAlign:'center',padding:'3rem'}}>
+          <div style={{fontSize:'3rem',marginBottom:'1rem'}}>🎯</div>
+          <h3>No goals set yet</h3>
+          <p style={{color:'var(--text3)',marginTop:'.5rem'}}>Complete onboarding to set your career goals</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── COMPANY MATCHING PAGE ────────────────────────────────────────────────────
+const CompanyMatchPage=({user})=>{
+  const users=DB.get('users')||[];
+  const me=users.find(u=>u.id===user.id)||user;
+  const readiness=Math.round((me.aptitudeScore*.25)+(me.softSkillsScore*.2)+(me.codingScore*.25)+(me.projectScore*4)+(me.certScore*4));
+  const overall=Math.round((me.aptitudeScore+me.softSkillsScore+me.codingScore)/3);
+
+  const COMPANIES=[
+    {name:'Google',logo:'🔵',tier:'MAANG',minScore:90,minCoding:88,minApt:85,roles:['SDE-1','SDE-2','Research Analyst'],package:'25–40 LPA',skills:['DSA','System Design','Python/Java','Problem Solving'],website:'careers.google.com'},
+    {name:'Microsoft',logo:'🟦',tier:'MAANG',minScore:85,minCoding:82,minApt:80,roles:['SDE-1','Program Manager','Data Scientist'],package:'20–35 LPA',skills:['C#/.NET','Azure','DSA','OOP'],website:'careers.microsoft.com'},
+    {name:'Amazon',logo:'🟠',tier:'MAANG',minScore:82,minCoding:80,minApt:78,roles:['SDE-1','Cloud Support','Operations'],package:'18–30 LPA',skills:['Java','AWS','System Design','Leadership'],website:'amazon.jobs'},
+    {name:'Flipkart',logo:'🟡',tier:'Product',minScore:75,minCoding:72,minApt:70,roles:['SDE-1','Data Analyst','Product Manager'],package:'16–28 LPA',skills:['React','Node.js','SQL','ML Basics'],website:'flipkartcareers.com'},
+    {name:'Swiggy',logo:'🟠',tier:'Product',minScore:70,minCoding:68,minApt:65,roles:['Backend Eng','Frontend Eng','Data Engineer'],package:'14–22 LPA',skills:['Python','Microservices','Kafka','Redis'],website:'careers.swiggy.com'},
+    {name:'Razorpay',logo:'🔷',tier:'Product',minScore:72,minCoding:70,minApt:68,roles:['SDE-1','API Engineer','Platform Engineer'],package:'14–24 LPA',skills:['Go/Node.js','Payments','REST APIs','Security'],website:'razorpay.com/jobs'},
+    {name:'Infosys',logo:'⬛',tier:'Service',minScore:50,minCoding:45,minApt:50,roles:['Systems Engineer','Tech Analyst','BPO Analyst'],package:'3.6–6 LPA',skills:['Java','SQL','Communication','OOPS'],website:'infosys.com/careers'},
+    {name:'TCS',logo:'🟫',tier:'Service',minScore:45,minCoding:40,minApt:45,roles:['Associate','IT Analyst','Business Analyst'],package:'3.5–7 LPA',skills:['Any programming','Communication','OOPS','SQL'],website:'tcs.com/careers'},
+    {name:'Wipro',logo:'🟣',tier:'Service',minScore:48,minCoding:42,minApt:48,roles:['Project Engineer','Associate Consultant'],package:'3.5–6 LPA',skills:['Java/Python','Communication','Teamwork'],website:'wipro.com/careers'},
+    {name:'Zomato',logo:'🔴',tier:'Product',minScore:68,minCoding:65,minApt:62,roles:['SDE-1','Data Analyst','Product Analyst'],package:'12–20 LPA',skills:['Python','SQL','ML','Product Thinking'],website:'zomato.com/jobs'},
+    {name:'Freshworks',logo:'🟢',tier:'Product',minScore:65,minCoding:62,minApt:60,roles:['Software Engineer','QA Engineer','Support Engineer'],package:'8–16 LPA',skills:['Ruby/Python/JS','SaaS','REST APIs'],website:'freshworks.com/company/careers'},
+    {name:'Accenture',logo:'🩷',tier:'Service',minScore:50,minCoding:45,minApt:50,roles:['Associate SE','Tech Analyst','Process Analyst'],package:'4–8 LPA',skills:['Java/Python','Cloud','Agile','Communication'],website:'accenture.com/careers'},
+  ];
+
+  const getMatchScore=(c)=>{
+    const codingMatch=Math.min(100,Math.round((me.codingScore/c.minCoding)*80));
+    const aptMatch=Math.min(100,Math.round((me.aptitudeScore/c.minApt)*80));
+    const overallMatch=Math.min(100,Math.round((overall/(c.minScore))*80));
+    return Math.min(100,Math.round((codingMatch+aptMatch+overallMatch)/3));
+  };
+
+  const matches=COMPANIES.map(c=>({...c,match:getMatchScore(c)})).sort((a,b)=>b.match-a.match);
+  const eligible=matches.filter(c=>c.match>=75);
+  const [filter,setFilter]=useState('All');
+  const tiers=['All','MAANG','Product','Service'];
+  const filtered=filter==='All'?matches:matches.filter(c=>c.tier===filter);
+
+  return(
+    <div>
+      <div className="card" style={{marginBottom:'1.25rem',background:'linear-gradient(135deg,var(--brand) 0%,var(--brand-mid) 100%)',border:'none',color:'#fff'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'1rem'}}>
+          <div>
+            <h3 style={{fontSize:'1.1rem',fontWeight:700,marginBottom:'.3rem'}}>🎯 Your Company Match</h3>
+            <p style={{opacity:.85,fontSize:'.875rem'}}>Based on your readiness score of <strong>{readiness}%</strong> across all skill areas</p>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{fontSize:'2rem',fontWeight:700}}>{eligible.length}</div>
+            <div style={{fontSize:'.8rem',opacity:.8}}>companies you qualify for</div>
+          </div>
+        </div>
+      </div>
+      <div className="tabs" style={{marginBottom:'1.25rem'}}>
+        {tiers.map(t=><button key={t} className={`tab-btn ${filter===t?'active':''}`} onClick={()=>setFilter(t)}>{t}</button>)}
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(310px,1fr))',gap:'1rem'}}>
+        {filtered.map(c=>{
+          const pct=c.match;
+          const color=pct>=80?'var(--accent)':pct>=60?'var(--brand)':pct>=40?'var(--warn)':'var(--danger)';
+          const eligible=pct>=75;
+          return(
+            <div key={c.name} className="company-match-card" style={{borderLeft:`4px solid ${color}`,opacity:pct<30?.6:1}}>
+              <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'.75rem'}}>
+                <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+                  <span style={{fontSize:'1.75rem'}}>{c.logo}</span>
+                  <div>
+                    <div style={{fontWeight:700,fontSize:'.95rem'}}>{c.name}</div>
+                    <div style={{fontSize:'.75rem',color:'var(--text3)'}}>{c.tier} · {c.package}</div>
+                  </div>
+                </div>
+                <div style={{textAlign:'right',flexShrink:0}}>
+                  <div style={{fontSize:'1.2rem',fontWeight:700,color}}>{pct}%</div>
+                  <Badge type={eligible?'success':'warn'}>{eligible?'Eligible':'Improving'}</Badge>
+                </div>
+              </div>
+              <div className="match-bar">
+                <div className="match-fill" style={{width:`${pct}%`,background:color}}/>
+              </div>
+              <div style={{display:'flex',flexWrap:'wrap',margin:'.5rem 0'}}>
+                {c.roles.map(r=><span key={r} className="match-tag">{r}</span>)}
+              </div>
+              <div style={{borderTop:'1px solid var(--border)',paddingTop:'.75rem',marginTop:'.5rem'}}>
+                <div style={{fontSize:'.72rem',color:'var(--text3)',marginBottom:'4px',fontWeight:600,textTransform:'uppercase',letterSpacing:'.4px'}}>Required Skills</div>
+                <div style={{display:'flex',flexWrap:'wrap'}}>
+                  {c.skills.map(s=><span key={s} className="match-tag" style={{background:me.codingScore>60?'var(--accent-light)':'var(--surface3)',color:me.codingScore>60?'#065f46':'var(--text2)'}}>{s}</span>)}
+                </div>
+              </div>
+              {!eligible&&(
+                <div style={{marginTop:'.75rem',padding:'.6rem .75rem',background:'var(--warn-light)',borderRadius:'8px',fontSize:'.78rem',color:'#92400e'}}>
+                  💡 Need {Math.max(0,c.minCoding-me.codingScore)}% more in coding, {Math.max(0,c.minApt-me.aptitudeScore)}% more in aptitude to qualify
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ─── QUESTION BANK EDITOR (Faculty) ──────────────────────────────────────────
+const QuestionBankPage=({facultyUser})=>{
+  const showToast=useContext(ToastCtx);
+  const [questions,setQuestions]=useState(()=>{
+    const saved=DB.get('custom_questions');
+    return saved||[
+      {id:'cq1',type:'aptitude',question:'What is the square root of 144?',opts:['10','11','12','13'],ans:2,category:'Number Theory',createdBy:facultyUser.id},
+      {id:'cq2',type:'coding',question:'Which Python keyword is used to define a function?',opts:['func','def','function','define'],ans:1,category:'Python',createdBy:facultyUser.id},
+    ];
+  });
+  const [tab,setTab]=useState('aptitude');
+  const [adding,setAdding]=useState(false);
+  const [form,setForm]=useState({type:tab,question:'',opts:['','','',''],ans:0,category:''});
+  const [editId,setEditId]=useState(null);
+
+  const myQ=questions.filter(q=>q.type===tab);
+  const types=['aptitude','softskills','coding'];
+
+  const setOpt=(i,v)=>setForm(f=>({...f,opts:f.opts.map((o,idx)=>idx===i?v:o)}));
+
+  const save=()=>{
+    if(!form.question||form.opts.some(o=>!o)){showToast('Fill all fields','error');return;}
+    if(editId){
+      const updated=questions.map(q=>q.id===editId?{...q,...form}:q);
+      DB.set('custom_questions',updated); setQuestions(updated);
+      showToast('Question updated!'); setEditId(null);
+    } else {
+      const nq={id:'cq'+Date.now(),...form,createdBy:facultyUser.id,createdAt:new Date().toISOString().split('T')[0]};
+      const updated=[...questions,nq]; DB.set('custom_questions',updated); setQuestions(updated);
+      showToast('Question added to bank!');
+    }
+    setAdding(false); setForm({type:tab,question:'',opts:['','','',''],ans:0,category:''});
+  };
+
+  const del=(id)=>{
+    const updated=questions.filter(q=>q.id!==id);
+    DB.set('custom_questions',updated); setQuestions(updated); showToast('Question removed');
+  };
+
+  const startEdit=(q)=>{
+    setForm({type:q.type,question:q.question,opts:[...q.opts],ans:q.ans,category:q.category||''});
+    setEditId(q.id); setAdding(true);
+  };
+
+  return(
+    <div>
+      <div className="section-header">
+        <div><div className="section-title">📝 Question Bank Editor</div><div className="section-sub">Manage custom assessment questions · {questions.length} total</div></div>
+        <button className="btn-brand btn-sm" onClick={()=>{setAdding(true);setEditId(null);setForm({type:tab,question:'',opts:['','','',''],ans:0,category:''});}}>+ Add Question</button>
+      </div>
+      <div className="tabs" style={{marginBottom:'1.25rem'}}>
+        {types.map(t=>(
+          <button key={t} className={`tab-btn ${tab===t?'active':''}`} onClick={()=>{setTab(t);setAdding(false);}}>
+            {t==='aptitude'?'🧠 Aptitude':t==='softskills'?'💬 Soft Skills':'💻 Coding'} ({questions.filter(q=>q.type===t).length})
+          </button>
+        ))}
+      </div>
+
+      {adding&&(
+        <div className="card" style={{marginBottom:'1.25rem',border:'2px solid var(--brand)'}}>
+          <div className="card-header"><div className="card-title">{editId?'Edit Question':'New Question'}</div><button className="btn-sm btn-outline" onClick={()=>{setAdding(false);setEditId(null);}}>✕ Cancel</button></div>
+          <div className="form-group"><label className="form-label">Question Text</label><textarea className="form-input" rows={2} placeholder="Write your question here…" value={form.question} onChange={e=>setForm(f=>({...f,question:e.target.value}))}/></div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px',marginBottom:'1rem'}}>
+            {form.opts.map((o,i)=>(
+              <div key={i} className="qb-opt-wrap">
+                <div className={`qb-opt-letter ${form.ans===i?'qb-opt-correct':''}`}>{String.fromCharCode(65+i)}</div>
+                <input className="form-input" style={{padding:'.45rem .75rem',flex:1}} placeholder={`Option ${String.fromCharCode(65+i)}`} value={o} onChange={e=>setOpt(i,e.target.value)}/>
+                <button className={`correct-btn ${form.ans===i?'selected':''}`} onClick={()=>setForm(f=>({...f,ans:i}))}>{form.ans===i?'✓ Correct':'Set correct'}</button>
+              </div>
+            ))}
+          </div>
+          <div className="grid-2">
+            <div className="form-group">
+              <label className="form-label">Category / Topic</label>
+              <input className="form-input" placeholder="e.g. Algebra, Python, Leadership…" value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Type</label>
+              <select className="form-select" value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value}))}>
+                <option value="aptitude">Aptitude</option>
+                <option value="softskills">Soft Skills</option>
+                <option value="coding">Coding</option>
+              </select>
+            </div>
+          </div>
+          <button className="btn-brand btn-sm" style={{padding:'.6rem 1.5rem'}} onClick={save}>{editId?'Update Question':'Save Question'}</button>
+        </div>
+      )}
+
+      {myQ.length===0?(
+        <div className="card" style={{textAlign:'center',padding:'3rem'}}>
+          <div style={{fontSize:'3rem',marginBottom:'1rem'}}>📝</div>
+          <h3>No custom questions yet</h3>
+          <p style={{color:'var(--text3)',marginTop:'.5rem'}}>Click "+ Add Question" to build your custom question bank</p>
+        </div>
+      ):(
+        <div style={{display:'grid',gap:'10px'}}>
+          {myQ.map((q,i)=>(
+            <div key={q.id} className="qb-row">
+              <div className="qb-num">{i+1}</div>
+              <div className="qb-body">
+                <div style={{fontWeight:600,fontSize:'.9rem',marginBottom:'6px'}}>{q.question}</div>
+                <div className="qb-opts">
+                  {q.opts.map((o,oi)=>(
+                    <div key={oi} style={{display:'flex',alignItems:'center',gap:'5px'}}>
+                      <div className={`qb-opt-letter ${q.ans===oi?'qb-opt-correct':''}`}>{String.fromCharCode(65+oi)}</div>
+                      <span style={{fontSize:'.82rem',color:q.ans===oi?'var(--accent)':'var(--text2)',fontWeight:q.ans===oi?600:400}}>{o}</span>
+                    </div>
+                  ))}
+                </div>
+                <div style={{display:'flex',gap:'6px',marginTop:'8px',flexWrap:'wrap'}}>
+                  {q.category&&<Badge type="info">{q.category}</Badge>}
+                  {q.createdAt&&<span style={{fontSize:'.72rem',color:'var(--text3)'}}>Added {q.createdAt}</span>}
+                </div>
+              </div>
+              <div style={{display:'flex',gap:'6px',flexShrink:0}}>
+                <button className="btn-sm btn-outline" style={{fontSize:'.75rem'}} onClick={()=>startEdit(q)}>Edit</button>
+                <button className="btn-sm btn-danger-outline" style={{fontSize:'.75rem'}} onClick={()=>del(q.id)}>Del</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── REPORT & EXPORT PAGE ─────────────────────────────────────────────────────
+const ReportsPage=({user})=>{
+  const showToast=useContext(ToastCtx);
+  const users=DB.get('users')||[];
+  const submissions=DB.get('submissions')||[];
+  const placements=DB.get('placements')||[];
+  const students=users.filter(u=>u.role==='student');
+
+  const avgApt=Math.round(students.reduce((a,s)=>a+s.aptitudeScore,0)/(students.length||1));
+  const avgSS=Math.round(students.reduce((a,s)=>a+s.softSkillsScore,0)/(students.length||1));
+  const avgCode=Math.round(students.reduce((a,s)=>a+s.codingScore,0)/(students.length||1));
+  const ready=students.filter(s=>Math.round((s.aptitudeScore*.25)+(s.softSkillsScore*.2)+(s.codingScore*.25)+(s.projectScore*4)+(s.certScore*4))>=75);
+
+  // Student-specific report
+  const isStudent=user.role==='student';
+  const me=isStudent?(users.find(u=>u.id===user.id)||user):null;
+  const mySubmissions=isStudent?submissions.filter(s=>s.studentId===user.id):[];
+
+  const handlePrint=()=>{
+    window.print();
+    showToast('Opened print dialog — save as PDF!');
+  };
+
+  const handleEmailSim=()=>{
+    showToast('Report sent to '+user.email+' (simulated)','success');
+    const notifs=DB.get('notifications')||[];
+    notifs.push({id:'n'+Date.now(),userId:user.id,title:'Report Exported',message:'Your placement readiness report was sent to '+user.email,type:'success',read:false,createdAt:new Date().toISOString().split('T')[0]});
+    DB.set('notifications',notifs);
+  };
+
+  return(
+    <div id="printable-report">
+      <div className="section-header no-print">
+        <div><div className="section-title">📄 Reports & Export</div><div className="section-sub">Generate and download placement reports</div></div>
+        <div style={{display:'flex',gap:'8px'}}>
+          <button className="btn-sm btn-outline" onClick={handleEmailSim}>📧 Email Report</button>
+          <button className="btn-sm btn-brand" onClick={handlePrint}>🖨️ Export PDF</button>
+        </div>
+      </div>
+
+      {/* Header block for print */}
+      <div className="report-section" style={{background:'linear-gradient(135deg,var(--brand),var(--brand-mid))',color:'#fff',border:'none'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:'1rem'}}>
+          <div>
+            <div style={{fontSize:'1.5rem',fontWeight:700,marginBottom:'.25rem'}}>🎯 PlaceTrack</div>
+            <div style={{opacity:.85}}>{isStudent?'Student Placement Readiness Report':'Batch Placement Analytics Report'}</div>
+            <div style={{fontSize:'.8rem',opacity:.7,marginTop:'.25rem'}}>Generated: {new Date().toLocaleDateString('en-IN',{year:'numeric',month:'long',day:'numeric'})}</div>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{fontSize:'2.2rem',fontWeight:700}}>{isStudent?Math.round((me.aptitudeScore*.25)+(me.softSkillsScore*.2)+(me.codingScore*.25)+(me.projectScore*4)+(me.certScore*4))+'%':Math.round(students.reduce((a,s)=>a+Math.round((s.aptitudeScore*.25)+(s.softSkillsScore*.2)+(s.codingScore*.25)),0)/(students.length||1))+'%'}</div>
+            <div style={{opacity:.8,fontSize:'.85rem'}}>{isStudent?'Readiness Score':'Avg Batch Readiness'}</div>
+          </div>
+        </div>
+      </div>
+
+      {isStudent?(
+        <>
+          <div className="report-section">
+            <h3 style={{marginBottom:'1rem',fontSize:'1rem',fontWeight:700}}>👤 Student Information</h3>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+              {[{l:'Name',v:me.name},{l:'USN',v:me.usn},{l:'Department',v:me.department},{l:'Year',v:me.year},{l:'Batch',v:me.batch},{l:'Email',v:me.email}].map(r=>(
+                <div key={r.l} style={{display:'flex',justifyContent:'space-between',padding:'.5rem 0',borderBottom:'1px solid var(--border)'}}>
+                  <span style={{fontSize:'.85rem',color:'var(--text3)'}}>{r.l}</span>
+                  <span style={{fontSize:'.85rem',fontWeight:500}}>{r.v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="report-section">
+            <h3 style={{marginBottom:'1rem',fontSize:'1rem',fontWeight:700}}>📊 Skill Scores</h3>
+            {[{l:'Aptitude',v:me.aptitudeScore,c:'var(--brand)'},{l:'Soft Skills',v:me.softSkillsScore,c:'#8B5CF6'},{l:'Coding',v:me.codingScore,c:'var(--accent)'},{l:'Projects',v:me.projectScore*20,c:'var(--warn)'},{l:'Certificates',v:me.certScore*20,c:'var(--danger)'}].map(r=>(
+              <div key={r.l} style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'.75rem'}}>
+                <span style={{width:'90px',fontSize:'.85rem',color:'var(--text2)',fontWeight:500}}>{r.l}</span>
+                <ProgressBar value={r.v} color={r.c}/>
+                <span style={{width:'40px',textAlign:'right',fontWeight:700,color:r.c,fontSize:'.85rem'}}>{r.v}%</span>
+              </div>
+            ))}
+          </div>
+          <div className="report-section">
+            <h3 style={{marginBottom:'1rem',fontSize:'1rem',fontWeight:700}}>📂 Submissions Summary</h3>
+            {mySubmissions.length===0?<p style={{color:'var(--text3)'}}>No submissions yet</p>:(
+              <table className="data-table" style={{borderRadius:'var(--radius)',overflow:'hidden'}}>
+                <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Rating</th></tr></thead>
+                <tbody>{mySubmissions.map(s=>(
+                  <tr key={s.id}>
+                    <td style={{fontWeight:500}}>{s.title}</td>
+                    <td><Badge type="info">{s.type}</Badge></td>
+                    <td><Badge type={s.status==='reviewed'?'success':'warn'}>{s.status}</Badge></td>
+                    <td><Stars value={s.facultyRating} readOnly/></td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            )}
+          </div>
+        </>
+      ):(
+        <>
+          <div className="report-section">
+            <h3 style={{marginBottom:'1rem',fontSize:'1rem',fontWeight:700}}>📈 Batch Overview</h3>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:'1rem'}}>
+              {[{l:'Total Students',v:students.length},{l:'Avg Aptitude',v:avgApt+'%'},{l:'Avg Soft Skills',v:avgSS+'%'},{l:'Avg Coding',v:avgCode+'%'},{l:'Placement Ready',v:ready.length},{l:'Total Submissions',v:submissions.length},{l:'Placements',v:placements.length}].map(i=>(
+                <div key={i.l} style={{background:'var(--surface2)',borderRadius:'var(--radius)',padding:'1rem',textAlign:'center'}}>
+                  <div style={{fontSize:'1.4rem',fontWeight:700,color:'var(--brand)'}}>{i.v}</div>
+                  <div style={{fontSize:'.75rem',color:'var(--text3)',marginTop:'2px'}}>{i.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="report-section">
+            <h3 style={{marginBottom:'1rem',fontSize:'1rem',fontWeight:700}}>🏆 Top Performers</h3>
+            <table className="data-table">
+              <thead><tr><th>Rank</th><th>Name</th><th>Department</th><th>Aptitude</th><th>Coding</th><th>Readiness</th></tr></thead>
+              <tbody>
+                {[...students].sort((a,b)=>(b.aptitudeScore+b.codingScore)-(a.aptitudeScore+a.codingScore)).slice(0,8).map((s,i)=>{
+                  const r=Math.round((s.aptitudeScore*.25)+(s.softSkillsScore*.2)+(s.codingScore*.25)+(s.projectScore*4)+(s.certScore*4));
+                  return(
+                    <tr key={s.id}>
+                      <td><Badge type={i<3?'success':'neutral'}>#{i+1}</Badge></td>
+                      <td style={{fontWeight:500}}>{s.name}</td>
+                      <td style={{fontSize:'.8rem',color:'var(--text2)'}}>{s.department}</td>
+                      <td>{s.aptitudeScore}%</td>
+                      <td>{s.codingScore}%</td>
+                      <td><Badge type={r>=75?'success':r>=50?'warn':'danger'}>{r}%</Badge></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      <div className="report-section" style={{textAlign:'center',color:'var(--text3)',fontSize:'.8rem',padding:'1rem'}}>
+        Generated by PlaceTrack Portal · {new Date().toLocaleString('en-IN')}
+      </div>
+    </div>
+  );
+};
+
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+const App=()=>{
+  const [user,setUser]=useState(()=>DB.get('currentUser'));
+  const [activePage,setActivePage]=useState('dashboard');
+  const [showNotifs,setShowNotifs]=useState(false);
+  const [sidebarOpen,setSidebarOpen]=useState(false);
+  const showToast=useContext(ToastCtx);
+  const {dark}=useContext(DarkCtx);
+
+  const handleAuth=(u)=>{ setUser(u); setActivePage('dashboard'); };
+  const handleLogout=()=>{ DB.del('currentUser'); setUser(null); setActivePage('dashboard'); };
+
+  const notifications=(DB.get('notifications')||[]).filter(n=>n.userId===user?.id&&!n.read);
+
+  const handleOnboardingComplete=(updatedUser)=>{
+    setUser(updatedUser);
+    setActivePage('dashboard');
+  };
+
+  const handleNav=(page)=>{
+    setActivePage(page);
+    setSidebarOpen(false);
+  };
+
+  if(!user) return <LoginPage onAuth={handleAuth}/>;
+  if(user.role==='student'&&!user.onboardingDone) return(
+    <div style={{minHeight:'100vh'}}>
+      <div style={{background:'var(--brand)',padding:'.875rem 2rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'10px',color:'#fff',fontFamily:"'Space Grotesk',sans-serif",fontWeight:700,fontSize:'1rem'}}>
+          <span>🎯</span> PlaceTrack — Onboarding
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+          <span style={{color:'rgba(255,255,255,.7)',fontSize:'.8rem'}}>Dark</span>
+          <DarkToggle/>
+          <button className="logout-btn" style={{color:'rgba(255,255,255,.8)',background:'none'}} onClick={handleLogout}>Sign out</button>
+        </div>
+      </div>
+      <OnboardingFlow user={user} onComplete={handleOnboardingComplete}/>
+    </div>
+  );
+
+  const pendingReviews=(DB.get('submissions')||[]).filter(s=>s.status==='pending').length;
+
+  // Extended nav configs with new pages
+  const extraStudentNav={
+    dashboard:<StudentDashboard user={user} onNav={handleNav}/>,
+    profile:<StudentProfilePage user={user}/>,
+    aptitude:<AssessmentPage user={user} type="aptitude"/>,
+    softskills:<AssessmentPage user={user} type="softskills"/>,
+    coding:<AssessmentPage user={user} type="coding"/>,
+    goals:<GoalsPage user={user}/>,
+    submissions:<SubmissionsPage user={user}/>,
+    certificates:<CertificatesPage user={user}/>,
+    roadmap:<CareerRoadmapPage user={user}/>,
+    leaderboard:<LeaderboardPage user={user}/>,
+    interviews:<InterviewPrepPage/>,
+    aicoach:<AICoachPage user={user}/>,
+    companymatch:<CompanyMatchPage user={user}/>,
+    reports:<ReportsPage user={user}/>,
+  };
+
+  const extraFacultyNav={
+    dashboard:<FacultyDashboard/>,
+    students:<FacultyStudentsPage/>,
+    review:<FacultyReviewPage facultyUser={user}/>,
+    ratings:<FacultyRatingPage facultyUser={user}/>,
+    certificates:<FacultyReviewPage facultyUser={user}/>,
+    analytics:<FacultyAnalyticsPage/>,
+    reports:<ReportsPage user={user}/>,
+    questionbank:<QuestionBankPage facultyUser={user}/>,
+  };
+
+  const extraAdminNav={
+    dashboard:<AdminDashboard/>,
+    users:<AdminUserManagement/>,
+    students:<FacultyStudentsPage/>,
+    faculty:<AdminUserManagement/>,
+    analytics:<FacultyAnalyticsPage/>,
+    placements:<AdminPlacementsPage/>,
+    reports:<ReportsPage user={user}/>,
+    settings:<div className="card"><div className="card-title" style={{marginBottom:'1rem'}}>⚙️ System Settings</div><p style={{color:'var(--text2)'}}>Settings panel — configure platform preferences.</p></div>,
+  };
+
+  const navMap=user.role==='student'?extraStudentNav:user.role==='faculty'?extraFacultyNav:extraAdminNav;
+  const renderedPage=navMap[activePage]||navMap['dashboard'];
+
+  // Updated nav configs with new pages
+  const fullNavConfig={
+    student:[
+      {section:'Overview',items:[{key:'dashboard',icon:'🏠',label:'Dashboard'},{key:'profile',icon:'👤',label:'My Profile'}]},
+      {section:'Assessments',items:[{key:'aptitude',icon:'🧠',label:'Aptitude Test'},{key:'softskills',icon:'💬',label:'Soft Skills'},{key:'coding',icon:'💻',label:'Coding Test'},{key:'goals',icon:'🎯',label:'Goal Setting'}]},
+      {section:'Portfolio',items:[{key:'submissions',icon:'📂',label:'My Submissions'},{key:'certificates',icon:'🏆',label:'Certificates'},{key:'roadmap',icon:'🗺️',label:'Career Roadmap'}]},
+      {section:'Compete',items:[{key:'leaderboard',icon:'📊',label:'Leaderboard'},{key:'companymatch',icon:'🏢',label:'Company Match'},{key:'interviews',icon:'🎤',label:'Interview Prep'}]},
+      {section:'AI & Reports',items:[{key:'aicoach',icon:'🤖',label:'AI Coach'},{key:'reports',icon:'📄',label:'My Report'}]},
+    ],
+    faculty:[
+      {section:'Overview',items:[{key:'dashboard',icon:'🏠',label:'Dashboard'},{key:'students',icon:'👥',label:'My Students'}]},
+      {section:'Grading',items:[{key:'review',icon:'📋',label:'Review Submissions'},{key:'ratings',icon:'⭐',label:'Rate Students'},{key:'certificates',icon:'🔍',label:'Verify Certificates'}]},
+      {section:'Tools',items:[{key:'questionbank',icon:'📝',label:'Question Bank'},{key:'analytics',icon:'📈',label:'Analytics'},{key:'reports',icon:'📄',label:'Reports & Export'}]},
+    ],
+    admin:[
+      {section:'Overview',items:[{key:'dashboard',icon:'🏠',label:'Dashboard'},{key:'users',icon:'👥',label:'User Management'}]},
+      {section:'Management',items:[{key:'students',icon:'🎓',label:'All Students'},{key:'faculty',icon:'👩‍🏫',label:'Faculty'}]},
+      {section:'Analytics',items:[{key:'analytics',icon:'📈',label:'Analytics'},{key:'placements',icon:'💼',label:'Placement Tracking'},{key:'reports',icon:'📄',label:'Reports & Export'}]},
+      {section:'Settings',items:[{key:'settings',icon:'⚙️',label:'System Settings'}]},
+    ],
+  };
+
+  const pageTitle={
+    dashboard:'Dashboard',profile:'My Profile',aptitude:'Aptitude Test',softskills:'Soft Skills',
+    coding:'Coding Test',goals:'Career Goals',submissions:'Submissions',certificates:'Certificates',
+    roadmap:'Career Roadmap',leaderboard:'Leaderboard',companymatch:'Company Match',
+    interviews:'Interview Prep',aicoach:'AI Coach',students:'Students',
+    review:'Review Submissions',ratings:'Rate Students',analytics:'Analytics',
+    reports:'Reports & Export',users:'User Management',placements:'Placement Tracking',
+    settings:'Settings',questionbank:'Question Bank Editor',
+  }[activePage]||'Dashboard';
+
+  return(
+    <div className="app-shell">
+      <Sidebar
+        user={user}
+        active={activePage}
+        onNav={handleNav}
+        onLogout={handleLogout}
+        notifCount={pendingReviews}
+        open={sidebarOpen}
+        onClose={()=>setSidebarOpen(false)}
+        navOverride={fullNavConfig[user.role]}
+      />
+      <div className="main-content">
+        <div className="topbar">
+          <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+            <button className="hamburger" onClick={()=>setSidebarOpen(o=>!o)} aria-label="Toggle menu">☰</button>
+            <div>
+              <div className="topbar-title">{pageTitle}</div>
+              <div style={{fontSize:'.75rem',color:'var(--text3)'}}>
+                {user.role==='student'&&`${user.department} · ${user.year}`}
+                {user.role==='faculty'&&`Faculty · ${user.department}`}
+                {user.role==='admin'&&'System Administrator'}
+              </div>
+            </div>
+          </div>
+          <div className="topbar-right">
+            <div className="notif-btn" onClick={()=>setShowNotifs(true)} title="Notifications">
+              🔔
+              {notifications.length>0&&<div className="notif-dot"/>}
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:'8px',background:'var(--surface3)',borderRadius:'var(--radius)',padding:'.4rem .75rem',cursor:'pointer'}} onClick={()=>handleNav(user.role==='student'?'profile':'dashboard')}>
+              <Avatar name={user.name} size={28}/>
+              <span style={{fontSize:'.8rem',fontWeight:600}}>{user.name.split(' ')[0]}</span>
+            </div>
+          </div>
+        </div>
+        <div className="page-content">{renderedPage}</div>
+      </div>
+      {showNotifs&&<NotificationsPanel user={user} onClose={()=>setShowNotifs(false)}/>}
+    </div>
+  );
+};
+
+// ─── DARK PROVIDER ────────────────────────────────────────────────────────────
+const DarkProvider=({children})=>{
+  const [dark,setDark]=useState(()=>DB.get('darkMode')===true);
+  useEffect(()=>{
+    document.body.classList.toggle('dark',dark);
+    DB.set('darkMode',dark);
+  },[dark]);
+  const toggle=useCallback(()=>setDark(d=>!d),[]);
+  return <DarkCtx.Provider value={{dark,toggle}}>{children}</DarkCtx.Provider>;
+};
+
+// ─── ROOT ──────────────────────────────────────────────────────────────────────
+const Root=()=>(
+  <DarkProvider>
+    <ToastProvider>
+      <AuthCtx.Provider value={null}>
+        <App/>
+      </AuthCtx.Provider>
+    </ToastProvider>
+  </DarkProvider>
+);
+ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
+</script>
+</body>
+</html>
