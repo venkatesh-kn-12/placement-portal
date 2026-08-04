@@ -19,81 +19,38 @@ import java.util.*;
 public class AuthController {
 
     private final UserRepository userRepo;
-    private final BCryptPasswordEncoder passwordEncoder;
 
-    @Value("${clerk.jwt.secret-key:default-secret-key-that-is-secure-and-long-enough-32-chars}")
-    private String secretKey;
-
-    public AuthController(UserRepository userRepo, BCryptPasswordEncoder passwordEncoder) {
+    public AuthController(UserRepository userRepo) {
         this.userRepo = userRepo;
-        this.passwordEncoder = passwordEncoder;
     }
 
-    private String generateToken(String email) {
-        return com.auth0.jwt.JWT.create()
-                .withSubject(email)
-                .withClaim("email", email)
-                .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 86400000)) // 24 hours
-                .sign(com.auth0.jwt.algorithms.Algorithm.HMAC256(secretKey));
-    }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        String password = body.get("password");
+
+    @PostMapping("/sync")
+    public ResponseEntity<?> syncUser(@RequestBody Map<String, String> body, @AuthenticationPrincipal Jwt jwt) {
+        // Fallback to body email if jwt is not fully injected due to permitAll, but normally JWT is preferred.
+        String email = jwt != null ? jwt.getSubject() : body.get("email");
         String fullName = body.get("fullName");
 
-        if (email == null || password == null || fullName == null || email.trim().isEmpty() || password.trim().isEmpty() || fullName.trim().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "All fields are required."));
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Email is required."));
         }
 
         String formattedEmail = email.toLowerCase().trim();
-        if (userRepo.findByEmail(formattedEmail).isPresent()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Email is already registered."));
+        Optional<User> existingUser = userRepo.findByEmail(formattedEmail);
+
+        if (existingUser.isEmpty()) {
+            User user = new User();
+            user.setEmail(formattedEmail);
+            user.setFullName(fullName != null ? fullName.trim() : "Student");
+            user.setRole(Role.STUDENT);
+            user.setCreatedAt(LocalDateTime.now());
+            userRepo.save(user);
+            return ResponseEntity.ok(user);
         }
 
-        User user = new User();
-        user.setEmail(formattedEmail);
-        user.setFullName(fullName.trim());
-        user.setPassword(passwordEncoder.encode(password));
-        user.setRole(Role.STUDENT);
-        user.setCreatedAt(LocalDateTime.now());
-        userRepo.save(user);
-
-        String token = generateToken(formattedEmail);
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        response.put("user", user);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(existingUser.get());
     }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        String password = body.get("password");
-
-        if (email == null || password == null || email.trim().isEmpty() || password.trim().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Email and password are required."));
-        }
-
-        String formattedEmail = email.toLowerCase().trim();
-        Optional<User> userOpt = userRepo.findByEmail(formattedEmail);
-
-        if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid email or password."));
-        }
-
-        User user = userOpt.get();
-        String token = generateToken(formattedEmail);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        response.put("user", user);
-        return ResponseEntity.ok(response);
-    }
-
     @GetMapping("/me")
     public ResponseEntity<?> getMe(@AuthenticationPrincipal Jwt jwt) {
         String email = jwt.getSubject();

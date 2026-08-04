@@ -27,10 +27,9 @@ spring:
       max-file-size: 5MB
       max-request-size: 5MB
 
-clerk:
+supabase:
   jwt:
-    issuer: https://fit-gazelle-0.clerk.accounts.dev
-    secret-key: ${CLERK_SECRET_KEY:default-secret-key-that-is-secure-and-long-enough-32-chars}
+    secret: ${SUPABASE_JWT_SECRET:default-secret-key-that-is-secure-and-long-enough-32-chars}
 
 server:
   port: ${PORT:8081}

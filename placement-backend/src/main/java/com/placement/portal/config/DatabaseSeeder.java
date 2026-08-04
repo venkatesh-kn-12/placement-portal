@@ -4,7 +4,6 @@ import com.placement.portal.model.*;
 import com.placement.portal.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-@ConditionalOnProperty(name = "app.seed-database", havingValue = "true")
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final UserRepository userRepo;
@@ -30,17 +28,17 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final StudentCourseProgressRepository progressRepo;
 
     public DatabaseSeeder(UserRepository userRepo,
-                          CourseRepository courseRepo,
-                          LessonRepository lessonRepo,
-                          QuizQuestionRepository quizRepo,
-                          SkillRepository skillRepo,
-                          BCryptPasswordEncoder passwordEncoder,
-                          CompanyRepository companyRepo,
-                          CompanyRequirementRepository requirementRepo,
-                          StudentProfileRepository profileRepo,
-                          StudentSkillRepository studentSkillRepo,
-                          SkillEvidenceRepository evidenceRepo,
-                          StudentCourseProgressRepository progressRepo) {
+            CourseRepository courseRepo,
+            LessonRepository lessonRepo,
+            QuizQuestionRepository quizRepo,
+            SkillRepository skillRepo,
+            BCryptPasswordEncoder passwordEncoder,
+            CompanyRepository companyRepo,
+            CompanyRequirementRepository requirementRepo,
+            StudentProfileRepository profileRepo,
+            StudentSkillRepository studentSkillRepo,
+            SkillEvidenceRepository evidenceRepo,
+            StudentCourseProgressRepository progressRepo) {
         this.userRepo = userRepo;
         this.courseRepo = courseRepo;
         this.lessonRepo = lessonRepo;
@@ -98,7 +96,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             Course sqlCourse = new Course();
             sqlCourse.setId("sql_dev");
             sqlCourse.setTitle("SQL Developer Boot Camp");
-            sqlCourse.setDescription("Learn production database querying, join optimizations, clustered vs non-clustered indexing and execution plan analyses.");
+            sqlCourse.setDescription(
+                    "Learn production database querying, join optimizations, clustered vs non-clustered indexing and execution plan analyses.");
             sqlCourse.setBadgeName("SQL Expert Badge");
             sqlCourse.setBadgeIcon("M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806");
             courseRepo.save(sqlCourse);
@@ -108,14 +107,16 @@ public class DatabaseSeeder implements CommandLineRunner {
             sqlL1.setId("sql_l1");
             sqlL1.setCourse(sqlCourse);
             sqlL1.setTitle("SQL Joins & Performance");
-            sqlL1.setContent("### Database Joins & Scan Optimization\nUnderstanding how tables are linked physically inside relational database systems:\n\n* **INNER JOIN**: Selects rows that have matching values in both tables.\n* **LEFT JOIN**: Returns all rows from the left table, and the matched rows from the right table. Matches without partner elements output `NULL`.\n\nOptimizing queries requires avoiding full table scans by indexing foreign key mapping columns.");
+            sqlL1.setContent(
+                    "### Database Joins & Scan Optimization\nUnderstanding how tables are linked physically inside relational database systems:\n\n* **INNER JOIN**: Selects rows that have matching values in both tables.\n* **LEFT JOIN**: Returns all rows from the left table, and the matched rows from the right table. Matches without partner elements output `NULL`.\n\nOptimizing queries requires avoiding full table scans by indexing foreign key mapping columns.");
             lessonRepo.save(sqlL1);
 
             Lesson sqlL2 = new Lesson();
             sqlL2.setId("sql_l2");
             sqlL2.setCourse(sqlCourse);
             sqlL2.setTitle("Clustered vs Non-Clustered Indexes");
-            sqlL2.setContent("### Indexing Architecture\nIndexes speed up query execution plans by building binary search tree reference structures:\n\n1. **Clustered Index**: Physical sorting constraint. Only one clustered index can exist per table (physically sorts table rows).\n2. **Non-Clustered Index**: Logical pointer lists referencing physical records. It has a structure separate from data rows.");
+            sqlL2.setContent(
+                    "### Indexing Architecture\nIndexes speed up query execution plans by building binary search tree reference structures:\n\n1. **Clustered Index**: Physical sorting constraint. Only one clustered index can exist per table (physically sorts table rows).\n2. **Non-Clustered Index**: Logical pointer lists referencing physical records. It has a structure separate from data rows.");
             lessonRepo.save(sqlL2);
 
             // Quiz for SQL
@@ -133,12 +134,12 @@ public class DatabaseSeeder implements CommandLineRunner {
             sqlQ2.setAnswer(1); // HAVING (index 1)
             quizRepo.save(sqlQ2);
 
-
             // DSA Academy Course
             Course dsaCourse = new Course();
             dsaCourse.setId("dsa_basics");
             dsaCourse.setTitle("Data Structures & Algorithms Mastery");
-            dsaCourse.setDescription("Ace technical programming evaluations. Study tree complexities, stacks and queues structures, and time efficiency constraints.");
+            dsaCourse.setDescription(
+                    "Ace technical programming evaluations. Study tree complexities, stacks and queues structures, and time efficiency constraints.");
             dsaCourse.setBadgeName("DSA Master Badge");
             dsaCourse.setBadgeIcon("M12 6.253v13m0-13C10.832 5.477 9.246 5");
             courseRepo.save(dsaCourse);
@@ -148,14 +149,16 @@ public class DatabaseSeeder implements CommandLineRunner {
             dsaL1.setId("dsa_l1");
             dsaL1.setCourse(dsaCourse);
             dsaL1.setTitle("Trees & BST Complexity");
-            dsaL1.setContent("### Binary Search Tree Complexity\nA Binary Search Tree (BST) stores elements such that left node values are smaller, and right node values are larger.\n\n* **Balanced Tree Search Complexity**: `O(log n)` worst case.\n* **Skewed Tree Search Complexity**: `O(n)` worst case, collapsing into linear lookup operations.");
+            dsaL1.setContent(
+                    "### Binary Search Tree Complexity\nA Binary Search Tree (BST) stores elements such that left node values are smaller, and right node values are larger.\n\n* **Balanced Tree Search Complexity**: `O(log n)` worst case.\n* **Skewed Tree Search Complexity**: `O(n)` worst case, collapsing into linear lookup operations.");
             lessonRepo.save(dsaL1);
 
             Lesson dsaL2 = new Lesson();
             dsaL2.setId("dsa_l2");
             dsaL2.setCourse(dsaCourse);
             dsaL2.setTitle("Stacks & Queues operations");
-            dsaL2.setContent("### Stack vs Queue Structures\n* **Stack**: LIFO (Last In, First Out) structure. Operations: `push` (adds to top), `pop` (removes from top) in `O(1)` time complexity.\n* **Queue**: FIFO (First In, First Out) structure. Elements are added at the rear (enqueue) and removed from the front (dequeue).");
+            dsaL2.setContent(
+                    "### Stack vs Queue Structures\n* **Stack**: LIFO (Last In, First Out) structure. Operations: `push` (adds to top), `pop` (removes from top) in `O(1)` time complexity.\n* **Queue**: FIFO (First In, First Out) structure. Elements are added at the rear (enqueue) and removed from the front (dequeue).");
             lessonRepo.save(dsaL2);
 
             // Quiz for DSA
@@ -178,68 +181,85 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         // Seed Skills & Skill-based Questions
         seedSkillAndQuestions("Java", SkillCategory.TECHNICAL, Arrays.asList(
-            new QData("What is the parent class of all classes in Java?", "Class,Object,Interface,String", 1),
-            new QData("Which of these is not a primitive type in Java?", "int,boolean,char,String", 3),
-            new QData("What is garbage collection in Java?", "Manual memory clearing,Automatic memory management,Deleting empty files,System reboot", 1),
-            new QData("Which keyword makes a variable constant in Java?", "constant,final,static,volatile", 1),
-            new QData("Which method is the entry point of any Java program?", "main,start,run,init", 0)
-        ));
+                new QData("What is the parent class of all classes in Java?", "Class,Object,Interface,String", 1),
+                new QData("Which of these is not a primitive type in Java?", "int,boolean,char,String", 3),
+                new QData("What is garbage collection in Java?",
+                        "Manual memory clearing,Automatic memory management,Deleting empty files,System reboot", 1),
+                new QData("Which keyword makes a variable constant in Java?", "constant,final,static,volatile", 1),
+                new QData("Which method is the entry point of any Java program?", "main,start,run,init", 0)));
 
         seedSkillAndQuestions("SQL", SkillCategory.TECHNICAL, Arrays.asList(
-            new QData("What does SQL stand for?", "Structured Query Language,Simple Query Logic,Sequential Query List,Standard Query Line", 0),
-            new QData("Which SQL command is used to retrieve data?", "ADD,GET,SELECT,RETRIEVE", 2),
-            new QData("Which keyword removes duplicate rows in SELECT?", "UNIQUE,DISTINCT,DIFFERENT,SINGLE", 1),
-            new QData("What is a PRIMARY KEY?", "A unique identifier for each row,A password for the database,A foreign key reference,A logical index", 0),
-            new QData("Which clause is used to filter records in SQL?", "HAVING,WHERE,GROUP BY,FILTER", 1)
-        ));
+                new QData("What does SQL stand for?",
+                        "Structured Query Language,Simple Query Logic,Sequential Query List,Standard Query Line", 0),
+                new QData("Which SQL command is used to retrieve data?", "ADD,GET,SELECT,RETRIEVE", 2),
+                new QData("Which keyword removes duplicate rows in SELECT?", "UNIQUE,DISTINCT,DIFFERENT,SINGLE", 1),
+                new QData("What is a PRIMARY KEY?",
+                        "A unique identifier for each row,A password for the database,A foreign key reference,A logical index",
+                        0),
+                new QData("Which clause is used to filter records in SQL?", "HAVING,WHERE,GROUP BY,FILTER", 1)));
 
         seedSkillAndQuestions("Python", SkillCategory.TECHNICAL, Arrays.asList(
-            new QData("How do you start a comment in Python?", "//,/*,#,--", 2),
-            new QData("Which data type is mutable in Python?", "Tuple,String,List,Integer", 2),
-            new QData("How do you define a function in Python?", "func,def,function,define", 1),
-            new QData("What is the output of len([1, 2, 3])?", "1,2,3,4", 2),
-            new QData("Which operator is used for exponentiation in Python?", "^,**,exp,pow", 1)
-        ));
+                new QData("How do you start a comment in Python?", "//,/*,#,--", 2),
+                new QData("Which data type is mutable in Python?", "Tuple,String,List,Integer", 2),
+                new QData("How do you define a function in Python?", "func,def,function,define", 1),
+                new QData("What is the output of len([1, 2, 3])?", "1,2,3,4", 2),
+                new QData("Which operator is used for exponentiation in Python?", "^,**,exp,pow", 1)));
 
         seedSkillAndQuestions("React", SkillCategory.TECHNICAL, Arrays.asList(
-            new QData("What is a component in React?", "A CSS stylesheet,A reusable UI piece,A backend controller,A database schema", 1),
-            new QData("Which hook is used to manage state in a functional component?", "useEffect,useContext,useState,useReducer", 2),
-            new QData("Which hook is used to run side effects in React?", "useEffect,useCallback,useMemo,useState", 0),
-            new QData("What is the virtual DOM?", "A lightweight copy of the real DOM,A physical browser window,An alternative to HTML,A server side database", 0),
-            new QData("How are props passed to a component?", "Via URL query,As arguments to function,As HTML attributes,Through database tables", 2)
-        ));
+                new QData("What is a component in React?",
+                        "A CSS stylesheet,A reusable UI piece,A backend controller,A database schema", 1),
+                new QData("Which hook is used to manage state in a functional component?",
+                        "useEffect,useContext,useState,useReducer", 2),
+                new QData("Which hook is used to run side effects in React?", "useEffect,useCallback,useMemo,useState",
+                        0),
+                new QData("What is the virtual DOM?",
+                        "A lightweight copy of the real DOM,A physical browser window,An alternative to HTML,A server side database",
+                        0),
+                new QData("How are props passed to a component?",
+                        "Via URL query,As arguments to function,As HTML attributes,Through database tables", 2)));
 
         seedSkillAndQuestions("JavaScript", SkillCategory.TECHNICAL, Arrays.asList(
-            new QData("Which keyword declares a block-scoped local variable?", "var,let,const,both let and const", 3),
-            new QData("What is the correct syntax for an arrow function?", "() => {},function() {},arrow => {},() -> {}", 0),
-            new QData("What does 'NaN' stand for in JS?", "Null and Nil,Not a Number,Number and Name,New and Null", 1),
-            new QData("How do you write a conditional statement in JS?", "if,when,select,where", 0),
-            new QData("Which method adds an element to the end of an array?", "push,pop,unshift,shift", 0)
-        ));
+                new QData("Which keyword declares a block-scoped local variable?", "var,let,const,both let and const",
+                        3),
+                new QData("What is the correct syntax for an arrow function?",
+                        "() => {},function() {},arrow => {},() -> {}", 0),
+                new QData("What does 'NaN' stand for in JS?", "Null and Nil,Not a Number,Number and Name,New and Null",
+                        1),
+                new QData("How do you write a conditional statement in JS?", "if,when,select,where", 0),
+                new QData("Which method adds an element to the end of an array?", "push,pop,unshift,shift", 0)));
 
         seedSkillAndQuestions("HTML/CSS", SkillCategory.TECHNICAL, Arrays.asList(
-            new QData("Which HTML tag is used for the largest heading?", "<h6>,<h1>,<heading>,<head>", 1),
-            new QData("What is the default display property of a div?", "inline,inline-block,block,flex", 2),
-            new QData("Which CSS property changes the text color?", "background-color,color,font-color,text-color", 1),
-            new QData("What does HTML stand for?", "HyperText Markup Language,HomeTool Markup Language,Hyperlink Text Mark,HighText Machine Language", 0),
-            new QData("Which CSS property controls the spacing outside an element?", "padding,margin,border,spacing", 1)
-        ));
+                new QData("Which HTML tag is used for the largest heading?", "<h6>,<h1>,<heading>,<head>", 1),
+                new QData("What is the default display property of a div?", "inline,inline-block,block,flex", 2),
+                new QData("Which CSS property changes the text color?", "background-color,color,font-color,text-color",
+                        1),
+                new QData("What does HTML stand for?",
+                        "HyperText Markup Language,HomeTool Markup Language,Hyperlink Text Mark,HighText Machine Language",
+                        0),
+                new QData("Which CSS property controls the spacing outside an element?",
+                        "padding,margin,border,spacing", 1)));
 
         seedSkillAndQuestions("Spring Boot", SkillCategory.TECHNICAL, Arrays.asList(
-            new QData("Which annotation marks a class as a Spring Boot application?", "@SpringBootApplication,@RestController,@Autowired,@Configuration", 0),
-            new QData("What is dependency injection in Spring?", "Providing objects a class needs,Creating external databases,Injecting HTML to page,Running manual queries", 0),
-            new QData("Which annotation defines a REST controller?", "@Controller,@RestController,@Service,@Component", 1),
-            new QData("Which annotation maps HTTP GET requests?", "@GetMapping,@PostMapping,@RequestMapping,@GET", 0),
-            new QData("What is the default embedded web server in Spring Boot?", "Tomcat,Jetty,Undertow,Nginx", 0)
-        ));
+                new QData("Which annotation marks a class as a Spring Boot application?",
+                        "@SpringBootApplication,@RestController,@Autowired,@Configuration", 0),
+                new QData("What is dependency injection in Spring?",
+                        "Providing objects a class needs,Creating external databases,Injecting HTML to page,Running manual queries",
+                        0),
+                new QData("Which annotation defines a REST controller?",
+                        "@Controller,@RestController,@Service,@Component", 1),
+                new QData("Which annotation maps HTTP GET requests?", "@GetMapping,@PostMapping,@RequestMapping,@GET",
+                        0),
+                new QData("What is the default embedded web server in Spring Boot?", "Tomcat,Jetty,Undertow,Nginx",
+                        0)));
 
         seedSkillAndQuestions("Node.js", SkillCategory.TECHNICAL, Arrays.asList(
-            new QData("What is Node.js?", "A frontend library,A JavaScript runtime environment,A database system,A styling framework", 1),
-            new QData("Which package manager is default for Node.js?", "pip,npm,maven,nuget", 1),
-            new QData("Which module is used to handle file paths in Node.js?", "path,fs,http,url", 0),
-            new QData("How do you import a module in Node.js using CommonJS?", "import,require,include,load", 1),
-            new QData("What does npm stand for?", "Node Project Manager,Node Package Manager,New Project Machine,Network Protocol Manager", 1)
-        ));
+                new QData("What is Node.js?",
+                        "A frontend library,A JavaScript runtime environment,A database system,A styling framework", 1),
+                new QData("Which package manager is default for Node.js?", "pip,npm,maven,nuget", 1),
+                new QData("Which module is used to handle file paths in Node.js?", "path,fs,http,url", 0),
+                new QData("How do you import a module in Node.js using CommonJS?", "import,require,include,load", 1),
+                new QData("What does npm stand for?",
+                        "Node Project Manager,Node Package Manager,New Project Machine,Network Protocol Manager", 1)));
 
         // 3. Seed Companies and Placement Drives
         if (companyRepo.count() == 0) {
@@ -259,7 +279,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         google.setRole("Software Engineer (SWE)");
         google.setMinCgpa(9.0);
         google.setVisitDate(LocalDate.now().plusDays(30));
-        google.setDescription("Google is hiring MCA/PG students for software engineer roles. Focus areas: Data Structures & Algorithms, Systems, Java/C++, and scalable schemas.");
+        google.setDescription(
+                "Google is hiring MCA/PG students for software engineer roles. Focus areas: Data Structures & Algorithms, Systems, Java/C++, and scalable schemas.");
         companyRepo.save(google);
 
         // 2. Amazon
@@ -268,7 +289,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         amazon.setRole("Cloud Software Engineer");
         amazon.setMinCgpa(8.5);
         amazon.setVisitDate(LocalDate.now().plusDays(45));
-        amazon.setDescription("Amazon Web Services (AWS) team is looking for cloud engineering roles. Primary requirements: SQL database optimization, systems design, and Python.");
+        amazon.setDescription(
+                "Amazon Web Services (AWS) team is looking for cloud engineering roles. Primary requirements: SQL database optimization, systems design, and Python.");
         companyRepo.save(amazon);
 
         // 3. Microsoft
@@ -277,7 +299,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         microsoft.setRole("Frontend Engineer");
         microsoft.setMinCgpa(8.0);
         microsoft.setVisitDate(LocalDate.now().plusDays(60));
-        microsoft.setDescription("Microsoft Azure portal team is looking for Frontend developers experienced in modern web architecture, React, and CSS/HTML standards.");
+        microsoft.setDescription(
+                "Microsoft Azure portal team is looking for Frontend developers experienced in modern web architecture, React, and CSS/HTML standards.");
         companyRepo.save(microsoft);
 
         // 4. TechCorp
@@ -286,7 +309,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         techcorp.setRole("Fullstack Developer");
         techcorp.setMinCgpa(7.5);
         techcorp.setVisitDate(LocalDate.now().plusDays(15));
-        techcorp.setDescription("TechCorp is a fast-growing SaaS startup. Hiring fullstack engineers with knowledge in Spring Boot, React, and PostgreSQL.");
+        techcorp.setDescription(
+                "TechCorp is a fast-growing SaaS startup. Hiring fullstack engineers with knowledge in Spring Boot, React, and PostgreSQL.");
         companyRepo.save(techcorp);
 
         // 5. Infosys
@@ -295,7 +319,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         infosys.setRole("Associate Consultant");
         infosys.setMinCgpa(6.0);
         infosys.setVisitDate(LocalDate.now().plusDays(10));
-        infosys.setDescription("Infosys is hiring associate engineers for global consulting projects. Candidates will undergo onboarding training in Java, SQL, and Agile methodologies.");
+        infosys.setDescription(
+                "Infosys is hiring associate engineers for global consulting projects. Candidates will undergo onboarding training in Java, SQL, and Agile methodologies.");
         companyRepo.save(infosys);
 
         // Seed Requirements
@@ -346,16 +371,16 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     private void seedTop10Students() {
         String[] names = {
-            "Aravind Swamy", "Bhavana Reddy", "Chaitanya Kumar", "Divya N",
-            "Eshwar Prasad", "Fathima Begum", "Ganesh Hegde", "Harish K",
-            "Indu S", "Jayanth M"
+                "Aravind Swamy", "Bhavana Reddy", "Chaitanya Kumar", "Divya N",
+                "Eshwar Prasad", "Fathima Begum", "Ganesh Hegde", "Harish K",
+                "Indu S", "Jayanth M"
         };
         double[] cgpas = { 9.6, 9.4, 9.1, 8.8, 8.4, 7.8, 7.2, 6.8, 6.2, 5.5 };
-        
+
         Skill softSkill = getOrSeedSkill("Soft Skills", SkillCategory.SOFT_SKILL);
         Skill aptitude = getOrSeedSkill("Quantitative Aptitude", SkillCategory.APTITUDE);
         Skill coding = getOrSeedSkill("Core Coding", SkillCategory.TECHNICAL);
-        
+
         Skill java = skillRepo.findByName("Java").orElse(null);
         Skill sql = skillRepo.findByName("SQL").orElse(null);
         Skill react = skillRepo.findByName("React").orElse(null);
@@ -365,7 +390,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             String name = names[i];
             double cgpa = cgpas[i];
             String email = name.toLowerCase().replace(" ", "") + "@portal.com";
-            
+
             // Create user
             User student = new User();
             student.setEmail(email);
@@ -374,7 +399,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             student.setRole(Role.STUDENT);
             student.setCreatedAt(LocalDateTime.now());
             userRepo.save(student);
-            
+
             // Create profile
             StudentProfile profile = new StudentProfile(student);
             profile.setHighestDegree("MCA");
@@ -393,7 +418,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             // Seed Core Evidence (scores for soft, aptitude, coding)
             double baseRating = 5.0 - (i * 0.4); // ranges from 5.0 down to ~1.4
             baseRating = Math.max(1.0, Math.min(5.0, baseRating));
-            
+
             saveEvidence(student, softSkill, Math.round(baseRating * 10.0) / 10.0);
             saveEvidence(student, aptitude, Math.round((baseRating + 0.2) * 10.0) / 10.0);
             saveEvidence(student, coding, Math.round((baseRating - 0.2) * 10.0) / 10.0);
@@ -468,6 +493,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         String question;
         String options;
         int answer;
+
         QData(String question, String options, int answer) {
             this.question = question;
             this.options = options;

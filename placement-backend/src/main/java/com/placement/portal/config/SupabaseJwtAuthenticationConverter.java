@@ -17,14 +17,14 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
-public class ClerkJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
+public class SupabaseJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
-    @Value("${clerk.jwt.secret-key:default-secret-key-that-is-secure-and-long-enough-32-chars}")
+    @Value("${supabase.jwt.secret:default-secret-key-that-is-secure-and-long-enough-32-chars}")
     private String secretKey;
 
     private final UserRepository userRepo;
 
-    public ClerkJwtAuthenticationConverter(UserRepository userRepo) {
+    public SupabaseJwtAuthenticationConverter(UserRepository userRepo) {
         this.userRepo = userRepo;
     }
 

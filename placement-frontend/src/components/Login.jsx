@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api, { setAuthToken } from '../services/api';
+import api from '../services/api';
+import { supabase } from '../services/supabaseClient';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -31,9 +32,18 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await api.post('/auth/login', { email, password });
-      const { token, user } = res.data;
-      setAuthToken(token);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        throw signInError;
+      }
+
+      // Fetch user profile from our backend to determine role
+      const res = await api.get('/auth/me');
+      const user = res.data;
 
       // Redirect based on user role
       if (user.role === 'ADMIN') {
@@ -45,7 +55,7 @@ export default function Login() {
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || 'Failed to authenticate. Please check your credentials.');
+      setError(err.response?.data?.error || err.message || 'Failed to authenticate. Please check your credentials.');
     } finally {
       setLoading(false);
     }

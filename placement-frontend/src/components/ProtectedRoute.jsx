@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import api, { setAuthToken } from '../services/api';
+import api from '../services/api';
+import { supabase } from '../services/supabaseClient';
 import { useAlert } from './AlertContext';
 
 export default function ProtectedRoute({ children, allowedRoles }) {
@@ -12,8 +13,8 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         setLoading(false);
         return;
       }
@@ -34,7 +35,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
         }
       } catch (err) {
         console.error("Session verification failed:", err);
-        setAuthToken(null);
+        await supabase.auth.signOut();
       } finally {
         setLoading(false);
       }
@@ -54,8 +55,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const token = localStorage.getItem('token');
-  if (!token || !dbUser) {
+  if (!dbUser) {
     return <Navigate to="/register" replace />;
   }
 

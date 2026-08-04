@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import api, { setAuthToken } from '../services/api';
+import api from '../services/api';
+import { supabase } from '../services/supabaseClient';
 import { useAlert } from './AlertContext';
 
 export default function Register() {
@@ -41,18 +42,26 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await api.post('/auth/register', {
-        fullName,
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
-        password
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          }
+        }
       });
-      const { token } = res.data;
-      setAuthToken(token);
+
+      if (signUpError) throw signUpError;
+
+      // Sync the user with our backend
+      await api.post('/auth/sync', { email, fullName });
+
       showAlert('Registration successful! Redirecting to student dashboard...');
       navigate('/dashboard');
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+      setError(err.response?.data?.error || err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }

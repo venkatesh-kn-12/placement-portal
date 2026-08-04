@@ -1,23 +1,23 @@
 import axios from 'axios';
+import { supabase } from './supabaseClient';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api'
 });
 
-// Load token from localStorage if present
-const token = localStorage.getItem('token');
-if (token) {
-  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-}
+// Intercept requests and add the Supabase token
+api.interceptors.request.use(async (config) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    config.headers.common['Authorization'] = `Bearer ${session.access_token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
 
 export const setAuthToken = (token) => {
-  if (token) {
-    localStorage.setItem('token', token);
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  } else {
-    localStorage.removeItem('token');
-    delete api.defaults.headers.common['Authorization'];
-  }
+  // Deprecated: Handled automatically by Supabase interceptor
 };
 
 export default api;

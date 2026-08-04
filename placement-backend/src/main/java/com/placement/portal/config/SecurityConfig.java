@@ -17,12 +17,12 @@ import java.time.Instant;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${clerk.jwt.secret-key:default-secret-key-that-is-secure-and-long-enough-32-chars}")
+    @Value("${supabase.jwt.secret:default-secret-key-that-is-secure-and-long-enough-32-chars}")
     private String secretKey;
 
-    private final ClerkJwtAuthenticationConverter authenticationConverter;
+    private final SupabaseJwtAuthenticationConverter authenticationConverter;
 
-    public SecurityConfig(ClerkJwtAuthenticationConverter authenticationConverter) {
+    public SecurityConfig(SupabaseJwtAuthenticationConverter authenticationConverter) {
         this.authenticationConverter = authenticationConverter;
     }
 
