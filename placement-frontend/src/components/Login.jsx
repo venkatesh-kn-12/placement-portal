@@ -2,12 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import { supabase } from '../services/supabaseClient';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   // Theme State
@@ -26,40 +24,34 @@ export default function Login() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) {
-        throw signInError;
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        try {
+          // Sync user to our backend database
+          const syncRes = await api.post('/auth/sync', { 
+            email: session.user.email, 
+            fullName: session.user.user_metadata?.full_name || session.user.email.split('@')[0]
+          });
+          
+          const user = syncRes.data;
+          
+          // Redirect based on role
+          if (user.role === 'ADMIN') {
+            navigate('/admin');
+          } else if (user.role === 'FACULTY') {
+            navigate('/faculty');
+          } else {
+            navigate('/dashboard');
+          }
+        } catch (error) {
+          console.error('Error syncing user:', error);
+        }
       }
+    });
 
-      // Fetch user profile from our backend to determine role
-      const res = await api.get('/auth/me');
-      const user = res.data;
-
-      // Redirect based on user role
-      if (user.role === 'ADMIN') {
-        navigate('/admin');
-      } else if (user.role === 'FACULTY') {
-        navigate('/faculty');
-      } else {
-        navigate('/dashboard');
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || err.message || 'Failed to authenticate. Please check your credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans antialiased text-slate-100 selection:bg-indigo-500/30">
@@ -96,75 +88,19 @@ export default function Login() {
           </div>
           <span className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">ReadyBound</span>
         </div>
-        <h2 className="text-xl font-bold tracking-tight text-slate-200">Sign in to your account</h2>
-        <p className="mt-1.5 text-xs text-slate-400">
-          Or{' '}
-          <Link to="/register" className="font-semibold text-indigo-400 hover:text-indigo-300 hover:underline transition-all">
-            create a new student profile
-          </Link>
-        </p>
+        <h2 className="text-xl font-bold tracking-tight text-slate-200">Authenticate</h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
         <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-8 backdrop-blur-xl bg-opacity-80">
           
-          {error && (
-            <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start space-x-3 text-red-400 text-xs">
-              <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <span>{error}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@domain.com"
-                className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 outline-none transition-all duration-200 shadow-inner"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 outline-none transition-all duration-200 shadow-inner"
-              />
-            </div>
-
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-[0.98] transition-all duration-150 rounded-xl text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center space-x-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></div>
-                    <span>Signing in...</span>
-                  </>
-                ) : (
-                  <span>Access Dashboard</span>
-                )}
-              </button>
-            </div>
-          </form>
+          <Auth
+            supabaseClient={supabase}
+            appearance={{ theme: ThemeSupa }}
+            theme={theme}
+            providers={['google', 'github']}
+            redirectTo={`${window.location.origin}/dashboard`}
+          />
 
         </div>
       </div>
