@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/placement_db
-    username: placement_user
-    password: placement_pass
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/placement_db}
+    username: ${SPRING_DATASOURCE_USERNAME:placement_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:placement_pass}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -33,7 +33,7 @@ clerk:
     secret-key: ${CLERK_SECRET_KEY:default-secret-key-that-is-secure-and-long-enough-32-chars}
 
 server:
-  port: 8081
+  port: ${PORT:8081}
   error:
     include-message: always
 
