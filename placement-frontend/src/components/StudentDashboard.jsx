@@ -527,7 +527,7 @@ export default function StudentDashboard() {
       {/* Tab Navigation header */}
       <div className="border-b border-slate-800 pb-2 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">ReadyBound Workspace</h1>
+          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">PlacementTracker Workspace</h1>
           <p className="text-xs text-slate-400 mt-0.5">Manage details, evaluate technical skills, align your resume, and upload evidence.</p>
         </div>
         <div className="flex flex-wrap gap-1">

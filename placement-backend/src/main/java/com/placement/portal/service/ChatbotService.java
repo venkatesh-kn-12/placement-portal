@@ -108,7 +108,7 @@ public class ChatbotService {
 
     private String buildSystemInstruction(User student, Long companyId) {
         StringBuilder systemInstruction = new StringBuilder();
-        systemInstruction.append("You are the Placement AI Coach for the ReadyBound placement portal.\n");
+        systemInstruction.append("You are the Placement AI Coach for the PlacementTracker placement portal.\n");
         systemInstruction.append("You help students prepare for campus placement drives, optimize their resumes, explain technical concepts (SQL, DSA, Java, etc.), and bridge skill gaps.\n\n");
         
         systemInstruction.append("Student Context:\n");
