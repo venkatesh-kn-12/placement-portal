@@ -4,6 +4,7 @@ import com.placement.portal.model.*;
 import com.placement.portal.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@ConditionalOnProperty(name = "app.seed-database", havingValue = "true")
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final UserRepository userRepo;
