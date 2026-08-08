@@ -39,7 +39,7 @@ public class CourseController {
     }
 
     private User getAuthenticatedUser(Jwt jwt) {
-        String email = jwt.getSubject();
+        String email = jwt.getClaimAsString("email"); if (email == null || email.isEmpty()) email = jwt.getSubject();
         return userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found."));
     }

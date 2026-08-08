@@ -1,8 +1,5 @@
 package com.placement.portal.config;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.placement.portal.model.User;
 import com.placement.portal.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,9 +16,6 @@ import java.util.List;
 @Component
 public class SupabaseJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
-    @Value("${supabase.jwt.secret:default-secret-key-that-is-secure-and-long-enough-32-chars}")
-    private String secretKey;
-
     private final UserRepository userRepo;
 
     public SupabaseJwtAuthenticationConverter(UserRepository userRepo) {
@@ -30,17 +24,16 @@ public class SupabaseJwtAuthenticationConverter implements Converter<Jwt, Abstra
 
     @Override
     public AbstractAuthenticationToken convert(Jwt source) {
-        DecodedJWT decoded = JWT.require(Algorithm.HMAC256(secretKey))
-                .build()
-                .verify(source.getTokenValue());
-
-        String email = decoded.getSubject();
+        String email = source.getClaimAsString("email");
+        if (email == null || email.isEmpty()) {
+            email = source.getSubject();
+        }
 
         // Fetch role from DB for real-time privilege updates
         String role = userRepo.findByEmail(email)
                 .map(u -> u.getRole().name())
                 .orElseGet(() -> {
-                    String r = decoded.getClaim("role").asString();
+                    String r = source.getClaimAsString("role");
                     return r != null ? r : "STUDENT";
                 });
 

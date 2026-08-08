@@ -29,7 +29,13 @@ public class AuthController {
     @PostMapping("/sync")
     public ResponseEntity<?> syncUser(@RequestBody Map<String, String> body, @AuthenticationPrincipal Jwt jwt) {
         // Fallback to body email if jwt is not fully injected due to permitAll, but normally JWT is preferred.
-        String email = jwt != null ? jwt.getSubject() : body.get("email");
+        String email = null;
+        if (jwt != null) {
+            email = jwt.getClaimAsString("email");
+            if (email == null || email.isEmpty()) email = jwt.getSubject();
+        } else {
+            email = body.get("email");
+        }
         String fullName = body.get("fullName");
 
         if (email == null || email.trim().isEmpty()) {
@@ -53,7 +59,8 @@ public class AuthController {
     }
     @GetMapping("/me")
     public ResponseEntity<?> getMe(@AuthenticationPrincipal Jwt jwt) {
-        String email = jwt.getSubject();
+        String email = jwt.getClaimAsString("email");
+        if (email == null || email.isEmpty()) email = jwt.getSubject();
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found in database."));
         return ResponseEntity.ok(user);

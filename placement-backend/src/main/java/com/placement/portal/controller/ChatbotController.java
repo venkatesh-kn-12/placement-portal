@@ -27,7 +27,7 @@ public class ChatbotController {
         String message = (String) body.get("message");
         Long companyId = body.get("companyId") != null ? Long.valueOf(body.get("companyId").toString()) : null;
 
-        String email = jwt.getSubject();
+        String email = jwt.getClaimAsString("email"); if (email == null || email.isEmpty()) email = jwt.getSubject();
         User student = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found."));
 

@@ -118,9 +118,7 @@ export default function Layout() {
       <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shrink-0">
         <div>
           <div className="p-6 border-b border-slate-800 flex items-center space-x-3">
-            <svg className="w-8 h-8 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+            <img src="/logo.png" alt="PlacementTracker Logo" className="w-8 h-8 rounded-lg shadow-sm" />
             <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">PlacementTracker</span>
           </div>
 
