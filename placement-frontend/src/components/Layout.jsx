@@ -1,6 +1,7 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import api, { setAuthToken } from '../services/api';
+import { supabase } from '../services/supabaseClient';
 import { useAlert } from './AlertContext';
 
 export default function Layout() {
@@ -166,7 +167,8 @@ export default function Layout() {
 
         <div className="p-4 border-t border-slate-800">
           <button
-            onClick={() => {
+            onClick={async () => {
+              await supabase.auth.signOut();
               setAuthToken(null);
               navigate('/login');
             }}
