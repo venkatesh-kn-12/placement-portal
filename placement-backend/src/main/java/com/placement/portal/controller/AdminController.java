@@ -11,6 +11,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import jakarta.persistence.EntityManager;
+import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -21,17 +23,20 @@ public class AdminController {
     private final CompanyRequirementRepository requirementRepo;
     private final SkillRepository skillRepo;
     private final StudentCourseProgressRepository progressRepo;
+    private final EntityManager entityManager;
 
     public AdminController(UserRepository userRepo,
                            CompanyRepository companyRepo,
                            CompanyRequirementRepository requirementRepo,
                            SkillRepository skillRepo,
-                           StudentCourseProgressRepository progressRepo) {
+                           StudentCourseProgressRepository progressRepo,
+                           EntityManager entityManager) {
         this.userRepo = userRepo;
         this.companyRepo = companyRepo;
         this.requirementRepo = requirementRepo;
         this.skillRepo = skillRepo;
         this.progressRepo = progressRepo;
+        this.entityManager = entityManager;
     }
 
     private User getAuthenticatedUser(Jwt jwt) {
@@ -60,6 +65,25 @@ public class AdminController {
         userRepo.save(user);
 
         return ResponseEntity.ok(user);
+    }
+
+    @Transactional
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> deleteUser(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        getAuthenticatedUser(jwt);
+        User target = userRepo.findById(id).orElseThrow(() -> new RuntimeException("User not found."));
+
+        // Manual cascade delete for associated entities
+        entityManager.createQuery("DELETE FROM StudentProfile p WHERE p.user.id = :id").setParameter("id", id).executeUpdate();
+        entityManager.createQuery("DELETE FROM StudentSkill s WHERE s.student.id = :id").setParameter("id", id).executeUpdate();
+        entityManager.createQuery("DELETE FROM SkillEvidence e WHERE e.student.id = :id").setParameter("id", id).executeUpdate();
+        entityManager.createQuery("DELETE FROM StudentProject p WHERE p.student.id = :id").setParameter("id", id).executeUpdate();
+        entityManager.createQuery("DELETE FROM StudentCourseProgress c WHERE c.student.id = :id").setParameter("id", id).executeUpdate();
+        entityManager.createQuery("DELETE FROM StudentCertificate c WHERE c.student.id = :id").setParameter("id", id).executeUpdate();
+        entityManager.createQuery("DELETE FROM Resume r WHERE r.student.id = :id").setParameter("id", id).executeUpdate();
+
+        userRepo.delete(target);
+        return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
     }
 
     @PostMapping("/companies")

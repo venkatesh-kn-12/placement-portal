@@ -56,6 +56,17 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteUser = async (userId, name) => {
+    if (!window.confirm(`Are you sure you want to permanently delete user ${name}?`)) return;
+    try {
+      await api.delete(`/admin/users/${userId}`);
+      alert('User deleted successfully.');
+      fetchAdminData();
+    } catch (err) {
+      alert("Failed to delete user: " + err.message);
+    }
+  };
+
   const handleSkillToggle = (skill) => {
     setSelectedSkills(prev => 
       prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]
@@ -283,7 +294,7 @@ export default function AdminDashboard() {
                     <td className="py-3 text-slate-400">
                       {new Date(u.createdAt).toLocaleDateString(undefined, { dateStyle: 'medium' })}
                     </td>
-                    <td className="py-3 pr-2 text-right">
+                    <td className="py-3 pr-2 flex items-center justify-end space-x-2">
                       <select
                         value={u.role}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
@@ -293,6 +304,15 @@ export default function AdminDashboard() {
                         <option value="FACULTY">FACULTY</option>
                         <option value="ADMIN">ADMIN</option>
                       </select>
+                      <button
+                        onClick={() => handleDeleteUser(u.id, u.fullName || u.email)}
+                        className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors"
+                        title="Delete User"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </td>
                   </tr>
                 ))}
