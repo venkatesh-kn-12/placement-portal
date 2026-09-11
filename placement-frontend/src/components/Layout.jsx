@@ -54,8 +54,13 @@ export default function Layout() {
 
   useEffect(() => {
     if (dbUser?.role === 'STUDENT') {
-      api.get('/companies').then(res => setCompanies(res.data)).catch(console.error);
-      api.get('/student/scores').then(res => setScores(res.data)).catch(console.error);
+      Promise.all([
+        api.get('/companies'),
+        api.get('/student/scores')
+      ]).then(([compRes, scoreRes]) => {
+        setCompanies(compRes.data);
+        setScores(scoreRes.data);
+      }).catch(console.error);
     }
   }, [dbUser]);
 

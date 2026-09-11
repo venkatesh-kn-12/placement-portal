@@ -37,6 +37,18 @@ public class ReadinessScoreService {
                 .orElse(0.0);
     }
 
+    // In-memory overload to avoid database round-trips
+    public Double getCurrentSkillRating(List<SkillEvidence> evidences, Long skillId) {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(90);
+        return evidences.stream()
+                .filter(e -> e.getSkill() != null && e.getSkill().getId().equals(skillId))
+                .filter(e -> e.getCreatedAt() != null && e.getCreatedAt().isAfter(cutoff))
+                .filter(e -> e.getDerivedRating() != null)
+                .mapToDouble(SkillEvidence::getDerivedRating)
+                .average()
+                .orElse(0.0);
+    }
+
     // Compute company match % for a student
     public double computeCompanyMatch(Long studentId, Long companyId) {
         List<CompanyRequirement> requirements = requirementRepo.findByCompanyId(companyId);
@@ -58,6 +70,18 @@ public class ReadinessScoreService {
         List<SkillGap> gaps = new ArrayList<>();
         for (CompanyRequirement req : requirements) {
             double current = getCurrentSkillRating(studentId, req.getSkill().getId());
+            if (current < req.getMinRating()) {
+                gaps.add(new SkillGap(req.getSkill().getName(), current, req.getMinRating()));
+            }
+        }
+        return gaps;
+    }
+
+    // In-memory overload for skill gaps
+    public List<SkillGap> getSkillGaps(List<SkillEvidence> evidences, List<CompanyRequirement> requirements) {
+        List<SkillGap> gaps = new ArrayList<>();
+        for (CompanyRequirement req : requirements) {
+            double current = getCurrentSkillRating(evidences, req.getSkill().getId());
             if (current < req.getMinRating()) {
                 gaps.add(new SkillGap(req.getSkill().getName(), current, req.getMinRating()));
             }

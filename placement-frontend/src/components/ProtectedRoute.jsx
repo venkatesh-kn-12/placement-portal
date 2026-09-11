@@ -13,11 +13,22 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      let session = null;
+      try {
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ data: { session: null } }), 1000));
+        const res = await Promise.race([sessionPromise, timeoutPromise]);
+        session = res?.data?.session;
+      } catch (e) {
+        console.warn("Supabase session check skipped/failed:", e);
+      }
+
+      const localToken = localStorage.getItem('token');
+      if (!session && !localToken) {
         setLoading(false);
         return;
       }
+
       try {
         const res = await api.get('/auth/me');
         const user = res.data;
@@ -35,7 +46,10 @@ export default function ProtectedRoute({ children, allowedRoles }) {
         }
       } catch (err) {
         console.error("Session verification failed:", err);
-        await supabase.auth.signOut();
+        try {
+          await supabase.auth.signOut();
+        } catch (e) {}
+        localStorage.removeItem('token');
       } finally {
         setLoading(false);
       }

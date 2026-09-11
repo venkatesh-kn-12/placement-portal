@@ -10,8 +10,10 @@ export default function FacultyDashboard() {
 
   const fetchFacultyData = async () => {
     try {
-      const studentsRes = await api.get('/faculty/students');
-      const pendingRes = await api.get('/faculty/evidence/pending');
+      const [studentsRes, pendingRes] = await Promise.all([
+        api.get('/faculty/students'),
+        api.get('/faculty/evidence/pending')
+      ]);
       setStudents(studentsRes.data);
       setPendingCount(pendingRes.data.length);
     } catch (err) {

@@ -73,39 +73,32 @@ export default function StudentDashboard() {
 
   const fetchData = async () => {
     try {
-      const scoresRes = await api.get(`/student/scores`);
-      const progressRes = await api.get(`/courses/progress`);
-      const coursesRes = await api.get(`/courses`);
-      const companiesRes = await api.get(`/companies`);
-      
-      setScores(scoresRes.data);
-      setProgress(progressRes.data);
-      setCourses(coursesRes.data);
-      setCompanies(companiesRes.data);
+      const [
+        scoresRes, progressRes, coursesRes, companiesRes,
+        profileRes, skillsRes, projectsRes, certsRes, resumeRes
+      ] = await Promise.allSettled([
+        api.get('/student/scores'),
+        api.get('/courses/progress'),
+        api.get('/courses'),
+        api.get('/companies'),
+        api.get('/student/profile'),
+        api.get('/student/skills'),
+        api.get('/student/projects'),
+        api.get('/student/certificates'),
+        api.get('/student/resume')
+      ]);
 
-      // Fetch Profile
-      const profileRes = await api.get('/student/profile');
-      if (profileRes.data) {
-        setProfile(profileRes.data);
-      }
-
-      // Fetch Skills
-      const skillsRes = await api.get('/student/skills');
-      setStudentSkills(skillsRes.data);
-
-      // Fetch Projects
-      const projectsRes = await api.get('/student/projects');
-      setProjects(projectsRes.data);
-
-      // Fetch Certificates
-      const certsRes = await api.get('/student/certificates');
-      setCerts(certsRes.data);
-
-      // Fetch Resume
-      const resumeRes = await api.get(`/student/resume`);
-      setResumeAnalysis(resumeRes.data);
-      if (resumeRes.data) {
-        setResumeText(resumeRes.data.resumeText || '');
+      if (scoresRes.status === 'fulfilled') setScores(scoresRes.value.data);
+      if (progressRes.status === 'fulfilled') setProgress(progressRes.value.data);
+      if (coursesRes.status === 'fulfilled') setCourses(coursesRes.value.data);
+      if (companiesRes.status === 'fulfilled') setCompanies(companiesRes.value.data);
+      if (profileRes.status === 'fulfilled' && profileRes.value.data) setProfile(profileRes.value.data);
+      if (skillsRes.status === 'fulfilled') setStudentSkills(skillsRes.value.data);
+      if (projectsRes.status === 'fulfilled') setProjects(projectsRes.value.data);
+      if (certsRes.status === 'fulfilled') setCerts(certsRes.value.data);
+      if (resumeRes.status === 'fulfilled' && resumeRes.value.data) {
+        setResumeAnalysis(resumeRes.value.data);
+        setResumeText(resumeRes.value.data.resumeText || '');
       }
     } catch (err) {
       console.error("Error loading student data:", err);

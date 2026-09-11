@@ -23,8 +23,10 @@ export default function LearningAcademy() {
 
   const fetchCoursesData = async () => {
     try {
-      const coursesRes = await api.get('/courses');
-      const progressRes = await api.get('/courses/progress');
+      const [coursesRes, progressRes] = await Promise.all([
+        api.get('/courses'),
+        api.get('/courses/progress')
+      ]);
       setCourses(coursesRes.data);
       setProgressList(progressRes.data);
     } catch (err) {

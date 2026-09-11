@@ -76,6 +76,11 @@ public class FacultyController {
                 .toList();
 
         List<Company> companies = companyRepo.findAll();
+        Map<Long, List<CompanyRequirement>> companyReqMap = new HashMap<>();
+        for (Company c : companies) {
+            companyReqMap.put(c.getId(), requirementRepo.findByCompanyId(c.getId()));
+        }
+
         Skill softSkill = getOrSeedSkill("Soft Skills", SkillCategory.SOFT_SKILL);
         Skill aptitude = getOrSeedSkill("Quantitative Aptitude", SkillCategory.APTITUDE);
         Skill coding = getOrSeedSkill("Core Coding", SkillCategory.TECHNICAL);
@@ -84,12 +89,11 @@ public class FacultyController {
 
         for (User student : students) {
             Long studentId = student.getId();
-
-            double soft = scoreService.getCurrentSkillRating(studentId, softSkill.getId());
-            double apt = scoreService.getCurrentSkillRating(studentId, aptitude.getId());
-            double code = scoreService.getCurrentSkillRating(studentId, coding.getId());
-
             List<SkillEvidence> allEvidences = evidenceRepo.findByStudentId(studentId);
+
+            double soft = scoreService.getCurrentSkillRating(allEvidences, softSkill.getId());
+            double apt = scoreService.getCurrentSkillRating(allEvidences, aptitude.getId());
+            double code = scoreService.getCurrentSkillRating(allEvidences, coding.getId());
 
             // Graded projects average
             List<SkillEvidence> projects = allEvidences.stream()
@@ -117,8 +121,8 @@ public class FacultyController {
                     .filter(e -> e.getType() == EvidenceType.MOCK_TEST)
                     .map(e -> {
                         Map<String, Object> mockItem = new HashMap<>();
-                        mockItem.put("company_name", e.getComment().contains("drive") ? e.getComment().replace("Completed mock test for ", "").replace(" placement drive.", "") : "General");
-                        mockItem.put("score", e.getRawScore().intValue());
+                        mockItem.put("company_name", e.getComment() != null && e.getComment().contains("drive") ? e.getComment().replace("Completed mock test for ", "").replace(" placement drive.", "") : "General");
+                        mockItem.put("score", e.getRawScore() != null ? e.getRawScore().intValue() : 0);
                         mockItem.put("taken_at", e.getCreatedAt());
                         return mockItem;
                     }).toList();
@@ -127,10 +131,11 @@ public class FacultyController {
             Resume resume = resumeRepo.findByStudentId(studentId).orElse(null);
             Integer resumeAts = resume != null ? resume.getAtsScore() : null;
 
-            // Gaps
+            // Gaps (in-memory)
             List<Map<String, Object>> gaps = new ArrayList<>();
             for (Company c : companies) {
-                List<ReadinessScoreService.SkillGap> companyGaps = scoreService.getSkillGaps(studentId, c.getId());
+                List<CompanyRequirement> reqs = companyReqMap.getOrDefault(c.getId(), Collections.emptyList());
+                List<ReadinessScoreService.SkillGap> companyGaps = scoreService.getSkillGaps(allEvidences, reqs);
                 if (!companyGaps.isEmpty()) {
                     Map<String, Object> gapItem = new HashMap<>();
                     gapItem.put("company", c.getName());
