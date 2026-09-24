@@ -2,7 +2,7 @@
 -- Supabase Schema & Row-Level Security (RLS) for Placement Portal
 -- ==============================================================================
 
--- 1. Users Table
+-- 1. Ensure Tables Exist
 CREATE TABLE IF NOT EXISTS public.users (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   email TEXT UNIQUE NOT NULL,
@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS public.users (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 2. Scores Table
 CREATE TABLE IF NOT EXISTS public.scores (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id TEXT REFERENCES public.users(id) ON DELETE CASCADE,
@@ -26,7 +25,6 @@ CREATE TABLE IF NOT EXISTS public.scores (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 3. Companies Table
 CREATE TABLE IF NOT EXISTS public.companies (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   name TEXT NOT NULL,
@@ -41,12 +39,10 @@ CREATE TABLE IF NOT EXISTS public.companies (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 4. Projects Table (Evidence)
 CREATE TABLE IF NOT EXISTS public.projects (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   student_name TEXT NOT NULL,
   student_usn TEXT,
-  student_id TEXT,
   title TEXT NOT NULL,
   description TEXT,
   tech_stack TEXT,
@@ -57,12 +53,10 @@ CREATE TABLE IF NOT EXISTS public.projects (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 5. Certificates Table (Evidence)
 CREATE TABLE IF NOT EXISTS public.certificates (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   student_name TEXT NOT NULL,
   student_usn TEXT,
-  student_id TEXT,
   name TEXT NOT NULL,
   issuer TEXT,
   issue_date DATE,
@@ -72,7 +66,6 @@ CREATE TABLE IF NOT EXISTS public.certificates (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 6. Courses Table
 CREATE TABLE IF NOT EXISTS public.courses (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
@@ -86,7 +79,6 @@ CREATE TABLE IF NOT EXISTS public.courses (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- 7. Study Materials Table
 CREATE TABLE IF NOT EXISTS public.study_materials (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   title TEXT NOT NULL,
@@ -97,8 +89,12 @@ CREATE TABLE IF NOT EXISTS public.study_materials (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Ensure optional student_id column exists safely
+ALTER TABLE public.projects ADD COLUMN IF NOT EXISTS student_id TEXT;
+ALTER TABLE public.certificates ADD COLUMN IF NOT EXISTS student_id TEXT;
+
 -- ==============================================================================
--- ROW LEVEL SECURITY (RLS) ACTIVATION
+-- 2. ENABLE ROW LEVEL SECURITY ON ALL TABLES
 -- ==============================================================================
 
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -110,137 +106,149 @@ ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.study_materials ENABLE ROW LEVEL SECURITY;
 
 -- ==============================================================================
--- CLEAN UP ANY INSECURE LEGACY WILDCARD POLICIES
+-- 3. DROP EXISTING POLICIES (TO AVOID DUPLICATE POLICY ERRORS)
 -- ==============================================================================
 
 DO $$
 BEGIN
-  -- Drop legacy wide-open policies if they exist
+  -- Users
   DROP POLICY IF EXISTS "Public access for users" ON public.users;
-  DROP POLICY IF EXISTS "Public access for scores" ON public.scores;
+  DROP POLICY IF EXISTS "Users viewable by everyone" ON public.users;
+  DROP POLICY IF EXISTS "Users viewable by all" ON public.users;
+  DROP POLICY IF EXISTS "Users can create their own profile" ON public.users;
+  DROP POLICY IF EXISTS "Users can update self or Admin can update all" ON public.users;
+  DROP POLICY IF EXISTS "Only Admins can delete users" ON public.users;
+
+  -- Companies
   DROP POLICY IF EXISTS "Public access for companies" ON public.companies;
+  DROP POLICY IF EXISTS "Companies viewable by all" ON public.companies;
+  DROP POLICY IF EXISTS "Only Admins can insert company drives" ON public.companies;
+  DROP POLICY IF EXISTS "Only Admins can update company drives" ON public.companies;
+  DROP POLICY IF EXISTS "Only Admins can delete company drives" ON public.companies;
+
+  -- Projects
   DROP POLICY IF EXISTS "Public access for projects" ON public.projects;
+  DROP POLICY IF EXISTS "Projects viewable by all" ON public.projects;
+  DROP POLICY IF EXISTS "Students can submit projects" ON public.projects;
+  DROP POLICY IF EXISTS "Faculty and Admin update access on projects" ON public.projects;
+  DROP POLICY IF EXISTS "Student owner or Admin delete projects" ON public.projects;
+  DROP POLICY IF EXISTS "Only Admins can delete projects" ON public.projects;
+
+  -- Certificates
   DROP POLICY IF EXISTS "Public access for certificates" ON public.certificates;
-  DROP POLICY IF EXISTS "Public access for courses" ON public.courses;
+  DROP POLICY IF EXISTS "Certificates viewable by all" ON public.certificates;
+  DROP POLICY IF EXISTS "Students can submit certificates" ON public.certificates;
+  DROP POLICY IF EXISTS "Faculty and Admin update access on certificates" ON public.certificates;
+  DROP POLICY IF EXISTS "Student owner or Admin delete certificates" ON public.certificates;
+  DROP POLICY IF EXISTS "Only Admins can delete certificates" ON public.certificates;
+
+  -- Scores
+  DROP POLICY IF EXISTS "Public access for scores" ON public.scores;
+  DROP POLICY IF EXISTS "Scores viewable by authenticated users" ON public.scores;
+  DROP POLICY IF EXISTS "Users can update own scores or Admin update all" ON public.scores;
+
+  -- Study Materials
   DROP POLICY IF EXISTS "Public access for study_materials" ON public.study_materials;
+  DROP POLICY IF EXISTS "Materials viewable by everyone" ON public.study_materials;
+  DROP POLICY IF EXISTS "Faculty and Admin manage materials" ON public.study_materials;
+
+  -- Courses
+  DROP POLICY IF EXISTS "Public access for courses" ON public.courses;
+  DROP POLICY IF EXISTS "Courses viewable by everyone" ON public.courses;
+  DROP POLICY IF EXISTS "Admins manage courses" ON public.courses;
 END $$;
 
 -- ==============================================================================
--- 1. USERS POLICIES
+-- 4. CREATE HARDENED ROW-LEVEL SECURITY POLICIES
 -- ==============================================================================
 
--- Anyone (including prospective recruiters & campus members) can view directory profiles
-CREATE POLICY "Users viewable by everyone"
+-- A. USERS
+CREATE POLICY "Users viewable by all"
 ON public.users FOR SELECT
 USING (true);
 
--- Authenticated users can insert their own profile on registration
 CREATE POLICY "Users can create their own profile"
 ON public.users FOR INSERT
 TO authenticated
-WITH CHECK (auth.uid()::text = id OR auth.jwt() ->> 'role' = 'ADMIN');
+WITH CHECK (auth.uid()::text = id OR (auth.jwt() ->> 'role') = 'ADMIN');
 
--- Users can only update their own profile; Admins can update any
 CREATE POLICY "Users can update self or Admin can update all"
 ON public.users FOR UPDATE
 TO authenticated
-USING (auth.uid()::text = id OR auth.jwt() ->> 'role' = 'ADMIN')
-WITH CHECK (auth.uid()::text = id OR auth.jwt() ->> 'role' = 'ADMIN');
+USING (auth.uid()::text = id OR (auth.jwt() ->> 'role') = 'ADMIN')
+WITH CHECK (auth.uid()::text = id OR (auth.jwt() ->> 'role') = 'ADMIN');
 
--- Only Admins can delete user records
 CREATE POLICY "Only Admins can delete users"
 ON public.users FOR DELETE
 TO authenticated
-USING (auth.jwt() ->> 'role' = 'ADMIN');
+USING ((auth.jwt() ->> 'role') = 'ADMIN');
 
-
--- ==============================================================================
--- 2. COMPANIES POLICIES (Corporate Recruitment Drives)
--- ==============================================================================
-
--- All users can view open company recruitment drives
+-- B. COMPANIES (Corporate Recruitment Drives)
 CREATE POLICY "Companies viewable by all"
 ON public.companies FOR SELECT
 USING (true);
 
--- ONLY Admins can publish new campus drives (blocks anon & student injections)
 CREATE POLICY "Only Admins can insert company drives"
 ON public.companies FOR INSERT
 TO authenticated
-WITH CHECK (auth.jwt() ->> 'role' = 'ADMIN');
+WITH CHECK ((auth.jwt() ->> 'role') = 'ADMIN');
 
--- ONLY Admins can update drives (deadlines, requirements, statuses)
 CREATE POLICY "Only Admins can update company drives"
 ON public.companies FOR UPDATE
 TO authenticated
-USING (auth.jwt() ->> 'role' = 'ADMIN')
-WITH CHECK (auth.jwt() ->> 'role' = 'ADMIN');
+USING ((auth.jwt() ->> 'role') = 'ADMIN')
+WITH CHECK ((auth.jwt() ->> 'role') = 'ADMIN');
 
--- ONLY Admins can delete drives
 CREATE POLICY "Only Admins can delete company drives"
 ON public.companies FOR DELETE
 TO authenticated
-USING (auth.jwt() ->> 'role' = 'ADMIN');
+USING ((auth.jwt() ->> 'role') = 'ADMIN');
 
-
--- ==============================================================================
--- 3. PROJECTS & CERTIFICATES POLICIES (Student Evidence & Faculty Verification)
--- ==============================================================================
-
--- Projects viewable by all (for portfolio showcases and verification)
+-- C. PROJECTS (Student Evidence)
 CREATE POLICY "Projects viewable by all"
 ON public.projects FOR SELECT
 USING (true);
 
--- Authenticated students can submit projects
 CREATE POLICY "Students can submit projects"
 ON public.projects FOR INSERT
 TO authenticated
-WITH CHECK (auth.uid()::text = student_id OR true);
+WITH CHECK (true);
 
--- Faculty and Admins can update review status and feedback
+-- Only Faculty and Admins can approve/reject/update status
 CREATE POLICY "Faculty and Admin update access on projects"
 ON public.projects FOR UPDATE
 TO authenticated
-USING (auth.jwt() ->> 'role' IN ('FACULTY', 'ADMIN') OR auth.uid()::text = student_id)
-WITH CHECK (auth.jwt() ->> 'role' IN ('FACULTY', 'ADMIN') OR auth.uid()::text = student_id);
+USING ((auth.jwt() ->> 'role') IN ('FACULTY', 'ADMIN'))
+WITH CHECK ((auth.jwt() ->> 'role') IN ('FACULTY', 'ADMIN'));
 
--- Only Admins or the student owner can delete projects
-CREATE POLICY "Student owner or Admin delete projects"
+CREATE POLICY "Only Admins can delete projects"
 ON public.projects FOR DELETE
 TO authenticated
-USING (auth.jwt() ->> 'role' = 'ADMIN' OR auth.uid()::text = student_id);
+USING ((auth.jwt() ->> 'role') = 'ADMIN');
 
-
--- Certificates viewable by all
+-- D. CERTIFICATES (Student Evidence)
 CREATE POLICY "Certificates viewable by all"
 ON public.certificates FOR SELECT
 USING (true);
 
--- Authenticated students can submit certificates
 CREATE POLICY "Students can submit certificates"
 ON public.certificates FOR INSERT
 TO authenticated
-WITH CHECK (auth.uid()::text = student_id OR true);
+WITH CHECK (true);
 
--- Faculty and Admins can review/verify certificates
+-- Only Faculty and Admins can approve/reject/verify certificates
 CREATE POLICY "Faculty and Admin update access on certificates"
 ON public.certificates FOR UPDATE
 TO authenticated
-USING (auth.jwt() ->> 'role' IN ('FACULTY', 'ADMIN') OR auth.uid()::text = student_id)
-WITH CHECK (auth.jwt() ->> 'role' IN ('FACULTY', 'ADMIN') OR auth.uid()::text = student_id);
+USING ((auth.jwt() ->> 'role') IN ('FACULTY', 'ADMIN'))
+WITH CHECK ((auth.jwt() ->> 'role') IN ('FACULTY', 'ADMIN'));
 
--- Only Admins or the student owner can delete certificates
-CREATE POLICY "Student owner or Admin delete certificates"
+CREATE POLICY "Only Admins can delete certificates"
 ON public.certificates FOR DELETE
 TO authenticated
-USING (auth.jwt() ->> 'role' = 'ADMIN' OR auth.uid()::text = student_id);
+USING ((auth.jwt() ->> 'role') = 'ADMIN');
 
-
--- ==============================================================================
--- 4. SCORES POLICIES (Candidate Assessment Metrics)
--- ==============================================================================
-
+-- E. SCORES
 CREATE POLICY "Scores viewable by authenticated users"
 ON public.scores FOR SELECT
 TO authenticated
@@ -249,34 +257,26 @@ USING (true);
 CREATE POLICY "Users can update own scores or Admin update all"
 ON public.scores FOR ALL
 TO authenticated
-USING (auth.uid()::text = user_id OR auth.jwt() ->> 'role' = 'ADMIN')
-WITH CHECK (auth.uid()::text = user_id OR auth.jwt() ->> 'role' = 'ADMIN');
+USING (auth.uid()::text = user_id OR (auth.jwt() ->> 'role') = 'ADMIN')
+WITH CHECK (auth.uid()::text = user_id OR (auth.jwt() ->> 'role') = 'ADMIN');
 
-
--- ==============================================================================
--- 5. STUDY MATERIALS & COURSES POLICIES
--- ==============================================================================
-
--- Study materials viewable by everyone
+-- F. STUDY MATERIALS & COURSES
 CREATE POLICY "Materials viewable by everyone"
 ON public.study_materials FOR SELECT
 USING (true);
 
--- Only Faculty and Admins can upload/modify study materials
 CREATE POLICY "Faculty and Admin manage materials"
 ON public.study_materials FOR ALL
 TO authenticated
-USING (auth.jwt() ->> 'role' IN ('FACULTY', 'ADMIN'))
-WITH CHECK (auth.jwt() ->> 'role' IN ('FACULTY', 'ADMIN'));
+USING ((auth.jwt() ->> 'role') IN ('FACULTY', 'ADMIN'))
+WITH CHECK ((auth.jwt() ->> 'role') IN ('FACULTY', 'ADMIN'));
 
--- Courses viewable by everyone
 CREATE POLICY "Courses viewable by everyone"
 ON public.courses FOR SELECT
 USING (true);
 
--- Only Admins can modify course curriculum
 CREATE POLICY "Admins manage courses"
 ON public.courses FOR ALL
 TO authenticated
-USING (auth.jwt() ->> 'role' = 'ADMIN')
-WITH CHECK (auth.jwt() ->> 'role' = 'ADMIN');
+USING ((auth.jwt() ->> 'role') = 'ADMIN')
+WITH CHECK ((auth.jwt() ->> 'role') = 'ADMIN');
