@@ -36,12 +36,21 @@ Open **http://localhost:3000** in your browser.
 
 ---
 
-## 🔑 Test Credentials (1-Click Login Supported)
+## 🔑 Portal Access Credentials
 
-| Role | Email | Password | What to Explore |
+| Role | Username / Identifier | Password | Access Area |
 | :--- | :--- | :--- | :--- |
-| **Student** | `student@portal.com` | `student123` | Assessment breakdown, Floating AI Coach, Submit Projects & Certifications |
-| **Faculty** | `faculty@portal.com` | `faculty123` | Evidence Verification Queue (Approve/Reject student submissions), Study Materials |
-| **Admin** | `admin@portal.com` | `admin123` | Branch Placement KPIs, Role Management, Launch Company Recruitment Drives |
+| **Master Admin** | `admin` (or `admin@portal.com`) | `admin@123` | Placement Directorate KPIs, Drive Publishing, Role Governance, Security Settings |
+| **Faculty Mentor** | `faculty@portal.com` | `faculty123` | Evidence Verification Queue (Approve/Reject student submissions), Study Materials |
+| **Student Candidate**| `student@portal.com` | `student123` | Skill Benchmarking, Real-time GitHub Heatmap, Portfolio Evidence Submission |
 
-*Tip: You can also use the **Quick Role Switcher** at the top of the sidebar to instantly switch profiles without logging out.*
+*Tip: You can change the Master Admin credentials anytime via the **Admin Security & Credentials** modal in the Admin Console.*
+
+---
+
+## 🛡️ Supabase Row Level Security (RLS)
+The database schema with hardened Row-Level Security policies is defined in [`supabase_schema.sql`](supabase_schema.sql).
+To apply or verify RLS in your Supabase dashboard:
+1. Navigate to the **SQL Editor** in your Supabase Dashboard (`https://kemetwenttjawedzquqh.supabase.co`).
+2. Paste and run [`supabase_schema.sql`](supabase_schema.sql).
+3. All tables (`users`, `companies`, `projects`, `certificates`, `scores`, `study_materials`, `courses`) will have RLS enabled, restricting anonymous mutations and allowing only authorized roles (`FACULTY`, `ADMIN`) to modify sensitive records.
