@@ -17,7 +17,7 @@ export async function verifyRole(request, allowedRoles = []) {
       const { data: { user }, error } = await supabase.auth.getUser(token);
       
       if (!error && user) {
-        const userRole = (user.user_metadata?.role || 'STUDENT').toUpperCase();
+        const userRole = (user.app_metadata?.role || user.user_metadata?.role || 'STUDENT').toUpperCase();
         if (allowedRoles.length === 0 || allowedRoles.includes(userRole)) {
           return {
             authorized: true,

@@ -170,9 +170,24 @@ export function AuthProvider({ children }) {
     return defaultAdmin;
   };
 
-  // Update Master Admin Credentials
+  // Update Master Admin Credentials (natively in Supabase Auth & local config)
   const updateAdminCredentials = async ({ username, email, password, fullName }) => {
     try {
+      // 1. Native Supabase Auth update if currently signed into Supabase
+      if (session?.user) {
+        const updatePayload = {};
+        if (password && password.trim()) updatePayload.password = password.trim();
+        if (fullName && fullName.trim()) updatePayload.data = { full_name: fullName.trim() };
+        if (email && email.trim().toLowerCase() !== session.user.email) {
+          updatePayload.email = email.trim().toLowerCase();
+        }
+        if (Object.keys(updatePayload).length > 0) {
+          const { error: supaErr } = await supabase.auth.updateUser(updatePayload);
+          if (supaErr) console.warn('Supabase auth update notice:', supaErr.message);
+        }
+      }
+
+      // 2. Synchronize local fallback configuration
       const current = getMasterAdminCreds();
       const updated = {
         ...current,
@@ -217,16 +232,24 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // 1. Sign In (handles Master Admin and standard credentials)
+  // 1. Native Supabase Sign In (with Master Admin identifier mapping)
   const signInWithSupabase = async (identifier, password) => {
     setAuthLoading(true);
     try {
       const cleanId = (identifier || '').trim().toLowerCase();
-      const adminCreds = getMasterAdminCreds();
+      // Map 'admin' alias to the native master admin email
+      const emailToAuth = cleanId === 'admin' ? 'admin@portal.com' : cleanId;
 
-      // Check Master Admin login
-      if (cleanId === adminCreds.username.toLowerCase() || cleanId === adminCreds.email.toLowerCase()) {
-        if (password === adminCreds.password) {
+      // Primary: Native Supabase Auth signInWithPassword
+      let authResult = await supabase.auth.signInWithPassword({
+        email: emailToAuth,
+        password
+      });
+
+      // Fallback: If native Supabase user is not yet migrated, verify local master admin
+      if (authResult.error) {
+        const adminCreds = getMasterAdminCreds();
+        if ((cleanId === 'admin' || cleanId === adminCreds.email.toLowerCase()) && password === adminCreds.password) {
           setIsDemo(false);
           localStorage.setItem('placement_is_demo', 'false');
           const safeProfile = { ...adminCreds };
@@ -236,22 +259,11 @@ export function AuthProvider({ children }) {
           showAlert(`Welcome back, ${adminCreds.fullName}!`, 'success');
           router.push('/admin');
           return { success: true };
-        } else {
-          showAlert('Invalid password for administrator account', 'warning');
-          return { success: false, error: 'Invalid admin password' };
         }
+        throw authResult.error;
       }
 
-      // Standard Supabase login
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: cleanId,
-        password
-      });
-
-      if (error) {
-        throw error;
-      }
-
+      const { data } = authResult;
       setIsDemo(false);
       localStorage.setItem('placement_is_demo', 'false');
 
@@ -260,23 +272,30 @@ export function AuthProvider({ children }) {
         const { data: userRecord } = await supabase
           .from('users')
           .select('*')
-          .eq('email', cleanId)
+          .eq('email', emailToAuth)
           .maybeSingle();
         profile = userRecord;
       } catch (e) {}
 
+      const resolvedRole = (
+        data.user?.app_metadata?.role ||
+        data.user?.user_metadata?.role ||
+        profile?.role ||
+        (emailToAuth === 'admin@portal.com' ? 'ADMIN' : 'STUDENT')
+      ).toUpperCase();
+
       if (!profile) {
         profile = {
           id: data.user?.id || `u-${Date.now()}`,
-          email: cleanId,
-          fullName: data.user?.user_metadata?.full_name || cleanId.split('@')[0],
-          role: data.user?.user_metadata?.role || 'STUDENT',
-          department: 'Computer Science & Engineering',
+          email: emailToAuth,
+          fullName: data.user?.user_metadata?.full_name || emailToAuth.split('@')[0],
+          role: resolvedRole,
+          department: resolvedRole === 'ADMIN' ? 'Placement Directorate' : 'Computer Science & Engineering',
           avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
           isDemo: false
         };
       } else {
-        profile.isDemo = false;
+        profile = { ...profile, role: resolvedRole, isDemo: false };
       }
 
       setUser(profile);
