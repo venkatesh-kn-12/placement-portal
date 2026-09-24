@@ -1,8 +1,6 @@
 -- ==============================================================================
 -- Migration: Native Master Admin Seed in Supabase auth.users
 -- ==============================================================================
--- Uses IF EXISTS / UPDATE / INSERT logic without depending on specific ON CONFLICT constraint names.
-
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 DO $$
@@ -61,7 +59,7 @@ BEGIN
   -- 2. Fetch the assigned user ID
   SELECT id INTO master_admin_id FROM auth.users WHERE email = admin_email;
 
-  -- 3. Insert or Update in auth.identities
+  -- 3. Insert or Update in auth.identities (id is of type UUID)
   IF EXISTS (SELECT 1 FROM auth.identities WHERE user_id = master_admin_id) THEN
     UPDATE auth.identities
     SET last_sign_in_at = now()
@@ -78,7 +76,7 @@ BEGIN
       updated_at
     )
     VALUES (
-      master_admin_id::text,
+      master_admin_id,
       master_admin_id,
       json_build_object('sub', master_admin_id::text, 'email', admin_email),
       'email',
