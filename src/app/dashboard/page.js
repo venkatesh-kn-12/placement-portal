@@ -24,9 +24,10 @@ import {
   Lock
 } from 'lucide-react';
 import AssessmentLockdownModal from '@/components/AssessmentLockdownModal';
+import GitHubActivityCard from '@/components/GitHubActivityCard';
 
 export default function StudentDashboard() {
-  const { user, scores, updateScores, isOnboarded, showAlert } = useAuth();
+  const { user, scores, updateScores, isOnboarded, isDemo, showAlert } = useAuth();
   const [projects, setProjects] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -67,9 +68,24 @@ export default function StudentDashboard() {
         const projData = await projRes.json();
         const certData = await certRes.json();
         const compData = await compRes.json();
-        setProjects(projData);
-        setCertificates(certData);
-        setCompanies(compData);
+
+        if (isDemo) {
+          // Evaluator Demo: show pre-loaded sample cohort data
+          setProjects(projData);
+          setCertificates(certData);
+        } else {
+          // Real Production User: show only their own submitted evidence or fresh clean slate
+          const userProjects = (projData || []).filter(
+            (p) => p.studentName === user?.fullName || p.student_name === user?.fullName
+          );
+          const userCerts = (certData || []).filter(
+            (c) => c.studentName === user?.fullName || c.student_name === user?.fullName
+          );
+          setProjects(userProjects);
+          setCertificates(userCerts);
+        }
+
+        setCompanies(compData || []);
       } catch (e) {
         console.error('Error fetching student data:', e);
       } finally {
@@ -77,7 +93,7 @@ export default function StudentDashboard() {
       }
     }
     fetchData();
-  }, []);
+  }, [isDemo, user?.fullName]);
 
   const handleAddProject = async (e) => {
     e.preventDefault();
@@ -86,7 +102,7 @@ export default function StudentDashboard() {
       const res = await fetch('/api/student/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProject)
+        body: JSON.stringify({ ...newProject, studentName: user?.fullName || 'Student' })
       });
       const created = await res.json();
       setProjects([created, ...projects]);
@@ -98,6 +114,24 @@ export default function StudentDashboard() {
     }
   };
 
+  const handleImportGitHubProject = async (projectData) => {
+    try {
+      const res = await fetch('/api/student/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...projectData,
+          studentName: user?.fullName || 'Student'
+        })
+      });
+      const created = await res.json();
+      setProjects([created, ...projects]);
+      showAlert(`Imported "${projectData.title}" from GitHub and submitted for faculty verification!`, 'success');
+    } catch (err) {
+      showAlert('Failed to import GitHub project', 'warning');
+    }
+  };
+
   const handleAddCertificate = async (e) => {
     e.preventDefault();
     if (!newCert.name) return;
@@ -105,7 +139,7 @@ export default function StudentDashboard() {
       const res = await fetch('/api/student/certificates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newCert)
+        body: JSON.stringify({ ...newCert, studentName: user?.fullName || 'Student' })
       });
       const created = await res.json();
       setCertificates([created, ...certificates]);
@@ -230,8 +264,14 @@ export default function StudentDashboard() {
 
       {/* Main Grid: Projects & Resume Analyzer */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Student Projects (8 cols) */}
+        {/* Left Column: Student Projects & Live GitHub Activity (8 cols) */}
         <div className="lg:col-span-8 space-y-6">
+          {/* Real-Time GitHub Developer Activity Card */}
+          <GitHubActivityCard
+            initialUsername={user?.githubUsername || ''}
+            onImportProject={handleImportGitHubProject}
+          />
+
           <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
             <div className="flex items-center justify-between">
               <div>
@@ -251,7 +291,13 @@ export default function StudentDashboard() {
               </button>
             </div>
 
-            <div className="space-y-3">
+            {projects.length === 0 ? (
+              <div className="p-8 text-center rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-slate-500 text-xs space-y-2">
+                <p className="font-semibold text-slate-700 dark:text-slate-300">No projects submitted yet.</p>
+                <p className="text-slate-400">Click &quot;Submit Project&quot; or import any of your public GitHub repositories with 1 click above to queue them for faculty verification!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
               {projects.map((proj) => (
                 <div
                   key={proj.id}
@@ -308,6 +354,7 @@ export default function StudentDashboard() {
                 </div>
               ))}
             </div>
+            )}
           </div>
 
           {/* Student Certifications */}
@@ -330,33 +377,39 @@ export default function StudentDashboard() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {certificates.map((cert) => (
-                <div
-                  key={cert.id}
-                  className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-1.5"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <h5 className="text-xs font-bold text-slate-900 dark:text-white">
-                      {cert.name}
-                    </h5>
-                    <span
-                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-                        cert.status === 'APPROVED'
-                          ? 'bg-emerald-500/10 text-emerald-500'
-                          : 'bg-amber-500/10 text-amber-500'
-                      }`}
-                    >
-                      {cert.status}
-                    </span>
+            {certificates.length === 0 ? (
+              <div className="p-6 text-center rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-slate-500 text-xs">
+                No industry certifications registered yet. Click &quot;Add Certificate&quot; to submit external credentials for graduation placement credit.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {certificates.map((cert) => (
+                  <div
+                    key={cert.id}
+                    className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 space-y-1.5"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h5 className="text-xs font-bold text-slate-900 dark:text-white">
+                        {cert.name}
+                      </h5>
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                          cert.status === 'APPROVED'
+                            ? 'bg-emerald-500/10 text-emerald-500'
+                            : 'bg-amber-500/10 text-amber-500'
+                        }`}
+                      >
+                        {cert.status}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500">{cert.issuer}</div>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      ID: {cert.credentialId}
+                    </div>
                   </div>
-                  <div className="text-[11px] text-slate-500">{cert.issuer}</div>
-                  <div className="text-[10px] text-slate-400 font-mono">
-                    ID: {cert.credentialId}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

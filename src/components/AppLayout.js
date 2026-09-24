@@ -10,7 +10,7 @@ import AssessmentLockdownModal from './AssessmentLockdownModal';
 import { ShieldAlert, Loader2 } from 'lucide-react';
 
 export default function AppLayout({ children }) {
-  const { user, role, mounted, isOnboarded } = useAuth();
+  const { user, role, mounted, isOnboarded, isDemo, exitDemoMode } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [showLockdownModal, setShowLockdownModal] = useState(false);
@@ -55,6 +55,22 @@ export default function AppLayout({ children }) {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Isolated Demo Notice Bar */}
+        {isDemo && (
+          <div className="bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 border-b border-amber-500/30 px-6 py-2 flex items-center justify-between text-amber-500 text-xs font-semibold">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>Demo Mode Active • Displaying mock evaluation cohort data</span>
+            </div>
+            <button
+              onClick={exitDemoMode}
+              className="px-2.5 py-0.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 text-[11px] font-bold transition-all"
+            >
+              Exit Demo
+            </button>
+          </div>
+        )}
+
         <Header />
 
         {/* Global Onboarding Warning Banner if student is not onboarded */}
