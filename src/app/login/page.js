@@ -7,32 +7,31 @@ import {
   Users,
   ShieldCheck,
   ArrowRight,
-  Sparkles,
   Mail,
   KeyRound,
   User as UserIcon,
-  Zap,
-  Terminal,
+  CheckCircle2,
+  Briefcase,
   Lock,
-  UserPlus
+  Sparkles
 } from 'lucide-react';
 
 export default function LoginPage() {
-  const { signInWithSupabase, signUpWithSupabase, signInWithOAuth, quickLogin, authLoading } = useAuth();
+  const { signInWithSupabase, signUpWithSupabase, signInWithOAuth, enterDemoMode, authLoading } = useAuth();
   const [mode, setMode] = useState('sign_in'); // 'sign_in' or 'sign_up'
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [selectedRole, setSelectedRole] = useState('STUDENT');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!identifier || !password) return;
 
     if (mode === 'sign_in') {
-      await signInWithSupabase(email, password);
+      await signInWithSupabase(identifier, password);
     } else {
-      await signUpWithSupabase(email, password, fullName, selectedRole);
+      await signUpWithSupabase(identifier, password, fullName, selectedRole);
     }
   };
 
@@ -45,9 +44,9 @@ export default function LoginPage() {
       <div className="max-w-6xl w-full mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
         {/* Left Side: Product Showcase */}
         <div className="lg:col-span-7 space-y-8">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold tracking-wide">
-            <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span>Supabase Authentication Active</span>
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold tracking-wide">
+            <ShieldCheck className="w-4 h-4 text-indigo-400" />
+            <span>Campus Placement Directorate • Career Portal</span>
           </div>
 
           <div className="space-y-4">
@@ -58,32 +57,32 @@ export default function LoginPage() {
               </span>
             </h1>
             <p className="text-slate-400 text-base sm:text-lg max-w-xl leading-relaxed">
-              Real-time student assessments, faculty evidence verification, recruiter drive matching, and automated AI career coaching.
+              Centralized student readiness tracking, recruiter drive shortlisting, faculty assessment verification, and automated career milestones.
             </p>
           </div>
 
-          {/* Key Feature Badges */}
+          {/* Key Feature Highlights */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 max-w-lg">
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 backdrop-blur-md">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-                  <Lock className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                  <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-xs text-white">OAuth & Supabase</h4>
-                  <p className="text-[11px] text-slate-400">Google, GitHub, and Email Auth</p>
+                  <h4 className="font-bold text-xs text-white">Verified Skill Benchmarks</h4>
+                  <p className="text-[11px] text-slate-400">Proctored aptitude, DSA & profile audits</p>
                 </div>
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 backdrop-blur-md">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
-                  <Terminal className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
+                  <Briefcase className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-xs text-white">Gemini AI Coach</h4>
-                  <p className="text-[11px] text-slate-400">24/7 placement guidance</p>
+                  <h4 className="font-bold text-xs text-white">Recruitment Drive Matching</h4>
+                  <p className="text-[11px] text-slate-400">Tier-1 drives & real-time offer analytics</p>
                 </div>
               </div>
             </div>
@@ -93,15 +92,15 @@ export default function LoginPage() {
           <div className="space-y-3 pt-6 border-t border-slate-800/80">
             <div className="flex items-center justify-between">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                <span>Evaluator Demo Sandbox</span>
+                <span>Evaluator Sandbox Mode</span>
                 <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-bold">
-                  Mock Data
+                  Instant Preview
                 </span>
               </div>
-              <span className="text-[11px] text-slate-500">Zero database footprint</span>
+              <span className="text-[11px] text-slate-500">Explore preloaded cohort records</span>
             </div>
             <p className="text-xs text-slate-400">
-              Testing the application? Launch isolated sandbox profiles with pre-seeded cohort data without creating an account:
+              Evaluating the platform? Launch test role views with pre-seeded data without modifying production accounts:
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
@@ -112,10 +111,10 @@ export default function LoginPage() {
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <GraduationCap className="w-4 h-4 text-emerald-400" />
-                  <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Demo Student</span>
+                  <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Student Preview</span>
                 </div>
                 <div className="text-xs font-bold text-white group-hover:text-emerald-300">Vamshi Krishna</div>
-                <div className="text-[10px] text-slate-500">Sample Portfolio</div>
+                <div className="text-[10px] text-slate-500">Skill Portfolio & Heatmap</div>
               </button>
 
               <button
@@ -125,10 +124,10 @@ export default function LoginPage() {
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <Users className="w-4 h-4 text-amber-400" />
-                  <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">Demo Faculty</span>
+                  <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">Faculty Preview</span>
                 </div>
                 <div className="text-xs font-bold text-white group-hover:text-amber-300">Dr. Ramesh Kumar</div>
-                <div className="text-[10px] text-slate-500">Pending Review Queue</div>
+                <div className="text-[10px] text-slate-500">Verification Queue</div>
               </button>
 
               <button
@@ -138,16 +137,16 @@ export default function LoginPage() {
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <ShieldCheck className="w-4 h-4 text-rose-400" />
-                  <span className="text-[9px] font-bold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">Demo Admin</span>
+                  <span className="text-[9px] font-bold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">Admin Preview</span>
                 </div>
-                <div className="text-xs font-bold text-white group-hover:text-rose-300">Placement Director</div>
-                <div className="text-[10px] text-slate-500">Cohort Analytics</div>
+                <div className="text-xs font-bold text-white group-hover:text-rose-300">Placement Officer</div>
+                <div className="text-[10px] text-slate-500">Analytics & Drives</div>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Right Side: Supabase Auth Form */}
+        {/* Right Side: Professional Auth Form */}
         <div className="lg:col-span-5">
           <div className="p-8 rounded-3xl bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-2xl relative">
             {/* Social OAuth Buttons */}
@@ -184,7 +183,7 @@ export default function LoginPage() {
             <div className="relative flex items-center justify-center mb-4">
               <div className="border-t border-slate-800 w-full"></div>
               <span className="bg-slate-900 px-3 text-[10px] text-slate-500 uppercase tracking-wider shrink-0">
-                Or with email
+                Or with credentials
               </span>
               <div className="border-t border-slate-800 w-full"></div>
             </div>
@@ -217,12 +216,12 @@ export default function LoginPage() {
 
             <div className="mb-5 space-y-1">
               <h2 className="text-xl font-bold text-white">
-                {mode === 'sign_in' ? 'Sign In with Email' : 'Register with Email'}
+                {mode === 'sign_in' ? 'Sign In to Portal' : 'Register New Account'}
               </h2>
               <p className="text-xs text-slate-400">
                 {mode === 'sign_in'
-                  ? 'Enter your registered Supabase credentials'
-                  : 'Create a new account linked to Supabase database'}
+                  ? 'Access your placement dashboard and candidate tracking'
+                  : 'Register a student or faculty mentor profile'}
               </p>
             </div>
 
@@ -245,40 +244,42 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {/* Role selection for Sign Up */}
+              {/* Role selection for Sign Up: RESTRICTED to STUDENT and FACULTY only */}
               {mode === 'sign_up' && (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Select Role</label>
-                  <div className="grid grid-cols-3 gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
-                    {['STUDENT', 'FACULTY', 'ADMIN'].map((r) => (
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Account Role</label>
+                  <div className="grid grid-cols-2 gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                    {['STUDENT', 'FACULTY'].map((r) => (
                       <button
                         key={r}
                         type="button"
                         onClick={() => setSelectedRole(r)}
-                        className={`text-xs font-bold py-1.5 rounded-lg transition-all ${
+                        className={`text-xs font-bold py-2 rounded-lg transition-all ${
                           selectedRole === r
                             ? 'bg-indigo-600 text-white shadow-md'
                             : 'text-slate-400 hover:text-white'
                         }`}
                       >
-                        {r.charAt(0) + r.slice(1).toLowerCase()}
+                        {r === 'STUDENT' ? 'Student Candidate' : 'Faculty Mentor'}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Email */}
+              {/* Identifier (Username or Email) */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Email Address</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  {mode === 'sign_in' ? 'Username or Email Address' : 'Email Address'}
+                </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="email"
+                    type="text"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@portal.com"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder={mode === 'sign_in' ? 'admin or student@dsatm.edu.in' : 'student@dsatm.edu.in'}
                     className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder:text-slate-600 outline-none transition-colors"
                   />
                 </div>
@@ -286,7 +287,14 @@ export default function LoginPage() {
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-slate-300">Password</label>
+                  {mode === 'sign_in' && (
+                    <span className="text-[10px] text-slate-500">
+                      Master Admin: <span className="text-slate-400 font-mono">admin / admin@123</span>
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <KeyRound className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
@@ -308,18 +316,18 @@ export default function LoginPage() {
               >
                 <span>
                   {authLoading
-                    ? 'Processing...'
+                    ? 'Authenticating...'
                     : mode === 'sign_in'
-                    ? 'Sign In with Supabase'
-                    : 'Create Supabase Account'}
+                    ? 'Sign In to Portal'
+                    : 'Create Account'}
                 </span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
 
-            <div className="mt-4 pt-4 border-t border-slate-800 text-center">
+            <div className="mt-5 pt-4 border-t border-slate-800/80 text-center">
               <span className="text-[11px] text-slate-500">
-                Connected to Supabase Project: kemetwenttjawedzquqh
+                Placement & Training Directorate • Dayananda Sagar Academy of Technology & Management
               </span>
             </div>
           </div>

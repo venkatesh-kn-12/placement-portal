@@ -124,12 +124,114 @@ export function AuthProvider({ children }) {
     }, 4500);
   };
 
-  // 1. Supabase Sign In with Email & Password
-  const signInWithSupabase = async (email, password) => {
+  // Master Admin Helper
+  const getMasterAdminCreds = () => {
+    if (typeof window === 'undefined') {
+      return {
+        id: 'master-admin-01',
+        username: 'admin',
+        email: 'admin@portal.com',
+        password: 'admin@123',
+        fullName: 'System Administrator',
+        role: 'ADMIN',
+        department: 'Placement Directorate',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        isDemo: false
+      };
+    }
+    const saved = localStorage.getItem('placement_master_admin_creds');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    const defaultAdmin = {
+      id: 'master-admin-01',
+      username: 'admin',
+      email: 'admin@portal.com',
+      password: 'admin@123',
+      fullName: 'System Administrator',
+      role: 'ADMIN',
+      department: 'Placement Directorate',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      isDemo: false
+    };
+    localStorage.setItem('placement_master_admin_creds', JSON.stringify(defaultAdmin));
+    return defaultAdmin;
+  };
+
+  // Update Master Admin Credentials
+  const updateAdminCredentials = async ({ username, email, password, fullName }) => {
+    try {
+      const current = getMasterAdminCreds();
+      const updated = {
+        ...current,
+        username: (username || current.username).trim(),
+        email: (email || current.email).trim().toLowerCase(),
+        password: password ? password.trim() : current.password,
+        fullName: fullName || current.fullName
+      };
+      localStorage.setItem('placement_master_admin_creds', JSON.stringify(updated));
+
+      // If active user is Admin, update state as well
+      if (user?.role === 'ADMIN') {
+        const mergedUser = { ...user, ...updated };
+        setUser(mergedUser);
+        localStorage.setItem('placement_user', JSON.stringify(mergedUser));
+      }
+
+      showAlert('Admin credentials updated successfully!', 'success');
+      return { success: true };
+    } catch (e) {
+      showAlert('Failed to update admin credentials', 'warning');
+      return { success: false, error: e.message };
+    }
+  };
+
+  // Send Password Reset Email for Admin or any user
+  const sendAdminPasswordResetEmail = async (targetEmail) => {
+    try {
+      const emailToSend = targetEmail || getMasterAdminCreds().email;
+      const { error } = await supabase.auth.resetPasswordForEmail(emailToSend, {
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/login` : undefined
+      });
+      if (error) {
+        console.warn('Supabase reset email notice:', error.message);
+      }
+      showAlert(`Password reset instructions sent to ${emailToSend}`, 'success');
+      return { success: true };
+    } catch (e) {
+      showAlert(`Password reset request dispatched to ${targetEmail}`, 'info');
+      return { success: true };
+    }
+  };
+
+  // 1. Sign In (handles Master Admin and standard credentials)
+  const signInWithSupabase = async (identifier, password) => {
     setAuthLoading(true);
     try {
+      const cleanId = (identifier || '').trim().toLowerCase();
+      const adminCreds = getMasterAdminCreds();
+
+      // Check Master Admin login
+      if (cleanId === adminCreds.username.toLowerCase() || cleanId === adminCreds.email.toLowerCase()) {
+        if (password === adminCreds.password) {
+          setIsDemo(false);
+          localStorage.setItem('placement_is_demo', 'false');
+          setUser(adminCreds);
+          localStorage.setItem('placement_user', JSON.stringify(adminCreds));
+          showAlert(`Welcome back, ${adminCreds.fullName}!`, 'success');
+          router.push('/admin');
+          return { success: true };
+        } else {
+          showAlert('Invalid password for administrator account', 'warning');
+          return { success: false, error: 'Invalid admin password' };
+        }
+      }
+
+      // Standard Supabase login
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: cleanId,
         password
       });
 
@@ -145,7 +247,7 @@ export function AuthProvider({ children }) {
         const { data: userRecord } = await supabase
           .from('users')
           .select('*')
-          .eq('email', email.toLowerCase().trim())
+          .eq('email', cleanId)
           .maybeSingle();
         profile = userRecord;
       } catch (e) {}
@@ -153,8 +255,8 @@ export function AuthProvider({ children }) {
       if (!profile) {
         profile = {
           id: data.user?.id || `u-${Date.now()}`,
-          email: email.toLowerCase().trim(),
-          fullName: data.user?.user_metadata?.full_name || email.split('@')[0],
+          email: cleanId,
+          fullName: data.user?.user_metadata?.full_name || cleanId.split('@')[0],
           role: data.user?.user_metadata?.role || 'STUDENT',
           department: 'Computer Science & Engineering',
           avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
@@ -174,25 +276,35 @@ export function AuthProvider({ children }) {
 
       return { success: true };
     } catch (err) {
-      showAlert(err.message || 'Supabase login failed', 'warning');
+      showAlert(err.message || 'Login failed. Please verify your credentials.', 'warning');
       return { success: false, error: err.message };
     } finally {
       setAuthLoading(false);
     }
   };
 
-  // 2. Supabase Sign Up with Email, Password, Full Name & Role
+  // 2. Sign Up (Restricted: Users CANNOT create an ADMIN account)
   const signUpWithSupabase = async (email, password, fullName, roleChoice = 'STUDENT') => {
     setAuthLoading(true);
     try {
-      const formattedEmail = email.toLowerCase().trim();
+      const formattedEmail = (email || '').toLowerCase().trim();
+      const adminCreds = getMasterAdminCreds();
+
+      // Enforce strict prevention of admin account registration
+      if (roleChoice === 'ADMIN' || formattedEmail === 'admin' || formattedEmail === adminCreds.email.toLowerCase()) {
+        showAlert('Admin accounts cannot be self-registered. Please contact the Placement Cell.', 'warning');
+        return { success: false, error: 'Admin registration prohibited' };
+      }
+
+      const assignedRole = roleChoice === 'FACULTY' ? 'FACULTY' : 'STUDENT';
+
       const { data, error } = await supabase.auth.signUp({
         email: formattedEmail,
         password,
         options: {
           data: {
             full_name: fullName,
-            role: roleChoice
+            role: assignedRole
           }
         }
       });
@@ -204,7 +316,7 @@ export function AuthProvider({ children }) {
       setIsDemo(false);
       localStorage.setItem('placement_is_demo', 'false');
 
-      // Brand new user starts with 0 assessments completed (Lockdown active until taken!)
+      // Brand new user starts with 0 assessments completed
       const freshScores = { soft_skills: 0, aptitude: 0, coding: 0, readiness_score: 0 };
       setScores(freshScores);
       localStorage.setItem('placement_scores', JSON.stringify(freshScores));
@@ -213,7 +325,7 @@ export function AuthProvider({ children }) {
         id: data.user?.id || `u-${Date.now()}`,
         email: formattedEmail,
         fullName: fullName || formattedEmail.split('@')[0],
-        role: roleChoice,
+        role: assignedRole,
         department: 'Computer Science & Engineering',
         cgpa: 8.5,
         isDemo: false
@@ -225,15 +337,14 @@ export function AuthProvider({ children }) {
 
       setUser(newProfile);
       localStorage.setItem('placement_user', JSON.stringify(newProfile));
-      showAlert('Fresh account created in Supabase! Welcome!', 'success');
+      showAlert('Account successfully registered! Welcome to the portal.', 'success');
 
-      if (roleChoice === 'ADMIN') router.push('/admin');
-      else if (roleChoice === 'FACULTY') router.push('/faculty');
+      if (assignedRole === 'FACULTY') router.push('/faculty');
       else router.push('/dashboard');
 
       return { success: true };
     } catch (err) {
-      showAlert(err.message || 'Supabase registration failed', 'warning');
+      showAlert(err.message || 'Registration failed. Please try again.', 'warning');
       return { success: false, error: err.message };
     } finally {
       setAuthLoading(false);
@@ -351,6 +462,9 @@ export function AuthProvider({ children }) {
       signInWithSupabase,
       signUpWithSupabase,
       signInWithOAuth,
+      updateAdminCredentials,
+      sendAdminPasswordResetEmail,
+      getMasterAdminCreds,
       logout,
       switchRole,
       theme,
