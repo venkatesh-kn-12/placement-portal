@@ -44,6 +44,8 @@ Open **http://localhost:3000** in your browser.
 | **Faculty Mentor** | `faculty@portal.com` | `faculty123` | Evidence Verification Queue (Approve/Reject student submissions), Study Materials |
 | **Student Candidate**| `student@portal.com` | `student123` | Skill Benchmarking, Real-time GitHub Heatmap, Portfolio Evidence Submission |
 
+Master Admin can now log in using admin (or admin@portal.com) with admin@123 via native Supabase Auth.
+
 *Tip: You can change the Master Admin credentials anytime via the **Admin Security & Credentials** modal in the Admin Console.*
 
 ---
