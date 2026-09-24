@@ -1,64 +1,47 @@
-# Placement Portal
+# PlacementPortal – Next.js Full-Stack Edition
 
-A comprehensive placement management platform connecting students, faculty, and administrators.
+A modern, full-stack campus placement intelligence platform connecting **Students**, **Faculty Mentors**, and **Placement Administrators**. Built entirely in **Next.js (App Router)** with **zero external Java Spring Boot or Supabase dependencies**.
 
-## Getting Started
+---
 
-### Prerequisites
-- Docker
-- Java (JDK 17+) & Maven
-- Node.js & npm
+## 🚀 Key Improvements & Architecture
 
-### Running the Application
+1. **Pure Full-Stack Next.js (No Java Spring Boot Required)**:
+   - Server-side Route Handlers (`/api/...`) manage all data persistence and API endpoints directly within Next.js.
+   - Hot-reloading in-memory and client-side stores with instant updates across hot reloads.
+2. **Removed Supabase Login & Registration**:
+   - Zero remote JWKS network errors, no cloud dependencies.
+   - Clean, modern authentication with **1-Click Test Profile Buttons** and standard credentials.
+3. **Multi-Role Portals & Instant Role Switcher**:
+   - 🎓 **Student Portal** (`/dashboard`): Assessment readiness breakdown, lockdown protection, verified projects, certificates, resume ATS scanner.
+   - 📚 **Learning Academy** (`/learning`): Structured curriculum (DSA, System Design, Aptitude, Soft Skills), interactive lesson completion, and quiz engine.
+   - 💼 **Placement Prep** (`/placement-prep`): Tier-1 company matching matrix (Google, Microsoft, Amazon, etc.), ATS keyword matcher, and timed mock test simulators.
+   - 👨‍🏫 **Faculty Hub** (`/faculty`): Student cohort directory, pending evidence verification queue (Approve / Reject), and study blueprint uploads.
+   - 🛡️ **Admin Console** (`/admin`): Department placement statistics, campus user role management, and new recruitment drive launcher.
+4. **Interactive AI Career Coach**:
+   - Persistent floating coach widget (`/api/chatbot`) providing real-time interview advice, ATS resume tips, and company preparation blueprints.
 
-Follow these steps to get the application up and running locally:
+---
 
-**1. Start the PostgreSQL Database**
-Make sure Docker is running on your machine, then open your terminal and run:
+## 🏃 Quick Start
+
+Navigate to the `placement-next` directory and run:
+
 ```powershell
-docker start placement_postgres
-```
-*(If you haven't created the container yet, you might need to use `docker-compose up -d` with the provided `docker-compose.yml` file)*
-
-**2. Start the Backend Server**
-Open a terminal window, navigate to the backend directory, and run the Maven command to start Spring Boot (runs on port 8081):
-```powershell
-cd placement-backend
-mvn spring-boot:run
-```
-
-**3. Start the Frontend Server**
-Open a new separate terminal window, navigate to the frontend directory, and start the React dev server:
-```powershell
-cd placement-frontend
+cd placement-next
 npm run dev
 ```
 
-Once both backend and frontend servers are active, open the app in your browser:
-👉 **http://localhost:5173/**
+Open **http://localhost:3000** in your browser.
 
 ---
 
-## Test Credentials
+## 🔑 Test Credentials (1-Click Login Supported)
 
-Use the following credentials to experience the different interfaces and features:
-
-| Role | Email | Password | Features to Test |
+| Role | Email | Password | What to Explore |
 | :--- | :--- | :--- | :--- |
-| **Student** | `student@portal.com` | `student123` | Test the onboarding assessment lockdown and floating AI Coach! |
-| **Faculty** | `faculty@portal.com` | `faculty123` | Track students and review project/certificate metrics! |
-| **Admin** | `admin@portal.com` | `admin123` | Manage user roles and view cohort analytics charts! |
+| **Student** | `student@portal.com` | `student123` | Assessment breakdown, Floating AI Coach, Submit Projects & Certifications |
+| **Faculty** | `faculty@portal.com` | `faculty123` | Evidence Verification Queue (Approve/Reject student submissions), Study Materials |
+| **Admin** | `admin@portal.com` | `admin123` | Branch Placement KPIs, Role Management, Launch Company Recruitment Drives |
 
----
-
-## Navigation & Security
-
-### Switching Roles
-To access a different role's dashboard (e.g., to access the **Admin page** when logged in as a student), follow these simple steps:
-
-1. **Sign Out**: Click the **Sign Out** button at the very bottom of your sidebar to log out of the current profile.
-2. **Access Login Page**: You will be redirected to the login screen.
-3. **Enter Credentials**: Enter the credentials for the role you wish to assume (e.g., `admin@portal.com` / `admin123`).
-4. **Dashboard Access**: Click **Access Dashboard**. The system will authenticate your role and automatically redirect you to the appropriate dashboard (e.g., `/admin`).
-
-*Note: Role-based security is strictly enforced. If you attempt to directly type an unauthorized URL (like `/admin`) in the browser URL bar while logged in as a student, the security router will block you and redirect you back to `/dashboard`.*
+*Tip: You can also use the **Quick Role Switcher** at the top of the sidebar to instantly switch profiles without logging out.*
