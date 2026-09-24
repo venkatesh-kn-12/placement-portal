@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/store';
+import { verifyRole } from '@/lib/serverAuth';
 
-export async function GET() {
+export async function GET(request) {
+  const auth = await verifyRole(request, ['FACULTY', 'ADMIN']);
+  if (!auth.authorized) return auth.response;
+
   const students = db.users
     .filter(u => u.role === 'STUDENT')
     .map(s => ({

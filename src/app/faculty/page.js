@@ -30,17 +30,21 @@ export default function FacultyPage() {
   useEffect(() => {
     async function loadFacultyData() {
       try {
+        const authHeaders = {
+          'x-user-role': user?.role || 'FACULTY',
+          'x-user-id': user?.id || 'faculty-01'
+        };
         const [studRes, evidRes, matRes] = await Promise.all([
-          fetch('/api/faculty/students'),
-          fetch('/api/faculty/evidence/pending'),
-          fetch('/api/faculty/materials')
+          fetch('/api/faculty/students', { headers: authHeaders }),
+          fetch('/api/faculty/evidence/pending', { headers: authHeaders }),
+          fetch('/api/faculty/materials', { headers: authHeaders })
         ]);
         const studData = await studRes.json();
         const evidData = await evidRes.json();
         const matData = await matRes.json();
-        setStudents(studData);
-        setPendingEvidence(evidData);
-        setMaterials(matData);
+        if (studRes.ok) setStudents(studData);
+        if (evidRes.ok) setPendingEvidence(evidData);
+        if (matRes.ok) setMaterials(matData);
       } catch (e) {
         console.error('Error loading faculty data:', e);
       } finally {
@@ -48,15 +52,23 @@ export default function FacultyPage() {
       }
     }
     loadFacultyData();
-  }, []);
+  }, [user]);
 
   const handleReviewEvidence = async (id, type, status) => {
     try {
-      await fetch('/api/faculty/evidence/pending', {
+      const res = await fetch('/api/faculty/evidence/pending', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': user?.role || 'FACULTY',
+          'x-user-id': user?.id || 'faculty-01'
+        },
         body: JSON.stringify({ id, type, status, feedback: status === 'APPROVED' ? 'Approved by Faculty' : 'Revisions required' })
       });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update evidence');
+      }
 
       if (type === 'PROJECT') {
         setPendingEvidence(prev => ({
@@ -71,7 +83,7 @@ export default function FacultyPage() {
       }
       showAlert(`Submission marked as ${status}!`, 'success');
     } catch (e) {
-      showAlert('Failed to update evidence status', 'warning');
+      showAlert(e.message || 'Failed to update evidence status', 'warning');
     }
   };
 
@@ -81,16 +93,24 @@ export default function FacultyPage() {
     try {
       const res = await fetch('/api/faculty/materials', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': user?.role || 'FACULTY',
+          'x-user-id': user?.id || 'faculty-01'
+        },
         body: JSON.stringify(newMaterial)
       });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to upload material');
+      }
       const created = await res.json();
       setMaterials([created, ...materials]);
       setShowMaterialModal(false);
       setNewMaterial({ title: '', category: 'Technical DSA', format: 'PDF' });
       showAlert('Study material uploaded to repository!', 'success');
     } catch (e) {
-      showAlert('Failed to upload material', 'warning');
+      showAlert(e.message || 'Failed to upload material', 'warning');
     }
   };
 

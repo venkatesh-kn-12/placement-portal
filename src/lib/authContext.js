@@ -31,7 +31,17 @@ export function AuthProvider({ children }) {
 
     if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        const adminCreds = getMasterAdminCreds();
+
+        // Prevent unauthorized role escalation via localStorage editing
+        if (parsed?.role === 'ADMIN' && parsed?.id !== adminCreds.id && !savedIsDemo) {
+          console.warn('Unauthorized client role detected, resetting to STUDENT');
+          parsed.role = 'STUDENT';
+          localStorage.setItem('placement_user', JSON.stringify(parsed));
+        }
+
+        setUser(parsed);
       } catch (e) {
         setUser(null);
       }
@@ -176,6 +186,7 @@ export function AuthProvider({ children }) {
       // If active user is Admin, update state as well
       if (user?.role === 'ADMIN') {
         const mergedUser = { ...user, ...updated };
+        delete mergedUser.password;
         setUser(mergedUser);
         localStorage.setItem('placement_user', JSON.stringify(mergedUser));
       }
@@ -218,8 +229,10 @@ export function AuthProvider({ children }) {
         if (password === adminCreds.password) {
           setIsDemo(false);
           localStorage.setItem('placement_is_demo', 'false');
-          setUser(adminCreds);
-          localStorage.setItem('placement_user', JSON.stringify(adminCreds));
+          const safeProfile = { ...adminCreds };
+          delete safeProfile.password;
+          setUser(safeProfile);
+          localStorage.setItem('placement_user', JSON.stringify(safeProfile));
           showAlert(`Welcome back, ${adminCreds.fullName}!`, 'success');
           router.push('/admin');
           return { success: true };

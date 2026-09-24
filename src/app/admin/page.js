@@ -59,14 +59,18 @@ export default function AdminPage() {
   useEffect(() => {
     async function loadAdminData() {
       try {
+        const authHeaders = {
+          'x-user-role': user?.role || 'ADMIN',
+          'x-user-id': user?.id || 'master-admin-01'
+        };
         const [statsRes, usersRes] = await Promise.all([
-          fetch('/api/admin/stats'),
-          fetch('/api/admin/users')
+          fetch('/api/admin/stats', { headers: authHeaders }),
+          fetch('/api/admin/users', { headers: authHeaders })
         ]);
         const statsData = await statsRes.json();
         const usersData = await usersRes.json();
-        setStats(statsData);
-        setUsers(usersData);
+        if (statsRes.ok) setStats(statsData);
+        if (usersRes.ok) setUsers(usersData);
       } catch (e) {
         console.error('Error loading admin data:', e);
       } finally {
@@ -74,31 +78,49 @@ export default function AdminPage() {
       }
     }
     loadAdminData();
-  }, []);
+  }, [user]);
 
   const handleRoleChange = async (userId, newRole) => {
     try {
-      await fetch('/api/admin/users', {
+      const res = await fetch('/api/admin/users', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': user?.role || 'ADMIN',
+          'x-user-id': user?.id || 'master-admin-01'
+        },
         body: JSON.stringify({ userId, role: newRole })
       });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update role');
+      }
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
       );
       showAlert(`User role updated to ${newRole}!`, 'success');
     } catch (e) {
-      showAlert('Failed to update user role', 'warning');
+      showAlert(e.message || 'Failed to update user role', 'warning');
     }
   };
 
   const handleDeleteUser = async (userId) => {
     try {
-      await fetch(`/api/admin/users?id=${userId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/admin/users?id=${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-user-role': user?.role || 'ADMIN',
+          'x-user-id': user?.id || 'master-admin-01'
+        }
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to delete user');
+      }
       setUsers((prev) => prev.filter((u) => u.id !== userId));
       showAlert('User removed from system', 'info');
     } catch (e) {
-      showAlert('Failed to delete user', 'warning');
+      showAlert(e.message || 'Failed to delete user', 'warning');
     }
   };
 
@@ -106,15 +128,23 @@ export default function AdminPage() {
     e.preventDefault();
     if (!newDrive.name || !newDrive.role) return;
     try {
-      await fetch('/api/companies', {
+      const res = await fetch('/api/companies', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': user?.role || 'ADMIN',
+          'x-user-id': user?.id || 'master-admin-01'
+        },
         body: JSON.stringify(newDrive)
       });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to publish drive');
+      }
       setShowDriveModal(false);
       showAlert(`Recruitment drive for ${newDrive.name} published!`, 'success');
     } catch (e) {
-      showAlert('Failed to publish drive', 'warning');
+      showAlert(e.message || 'Failed to publish drive', 'warning');
     }
   };
 
