@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { initialUsers, initialScores } from './data';
 import { supabase } from './supabase';
 import { useRouter, usePathname } from 'next/navigation';
@@ -407,6 +407,29 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // 3b. Google Identity Services (GIS) ID Token Sign-In (Direct client-side flow)
+  const signInWithGoogleIdToken = useCallback(async (idToken) => {
+    setAuthLoading(true);
+    try {
+      setIsDemo(false);
+      localStorage.setItem('placement_is_demo', 'false');
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      });
+      if (error) throw error;
+      showAlert('Signed in successfully with Google!', 'success');
+      router.push('/dashboard');
+      return { success: true, data };
+    } catch (err) {
+      console.error('Google ID Token auth error:', err);
+      showAlert(err.message || 'Google Sign-In failed', 'warning');
+      return { success: false, error: err.message };
+    } finally {
+      setAuthLoading(false);
+    }
+  }, [router]);
+
   // 4. Enter Isolated Demo Mode
   const enterDemoMode = (demoRole = 'STUDENT') => {
     setIsDemo(true);
@@ -494,6 +517,7 @@ export function AuthProvider({ children }) {
       signInWithSupabase,
       signUpWithSupabase,
       signInWithOAuth,
+      signInWithGoogleIdToken,
       updateAdminCredentials,
       sendAdminPasswordResetEmail,
       getMasterAdminCreds,
