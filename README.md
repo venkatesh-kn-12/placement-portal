@@ -1,58 +1,82 @@
-# PlacementPortal – Next.js Full-Stack Edition
+# 🚀 PlacementPortal – Next.js Full-Stack Edition
 
-A modern, full-stack campus placement intelligence platform connecting **Students**, **Faculty Mentors**, and **Placement Administrators**. Built entirely in **Next.js (App Router)** with **zero external Java Spring Boot or Supabase dependencies**.
-
----
-
-## 🚀 Key Improvements & Architecture
-
-1. **Pure Full-Stack Next.js (No Java Spring Boot Required)**:
-   - Server-side Route Handlers (`/api/...`) manage all data persistence and API endpoints directly within Next.js.
-   - Hot-reloading in-memory and client-side stores with instant updates across hot reloads.
-2. **Removed Supabase Login & Registration**:
-   - Zero remote JWKS network errors, no cloud dependencies.
-   - Clean, modern authentication with **1-Click Test Profile Buttons** and standard credentials.
-3. **Multi-Role Portals & Instant Role Switcher**:
-   - 🎓 **Student Portal** (`/dashboard`): Assessment readiness breakdown, lockdown protection, verified projects, certificates, resume ATS scanner.
-   - 📚 **Learning Academy** (`/learning`): Structured curriculum (DSA, System Design, Aptitude, Soft Skills), interactive lesson completion, and quiz engine.
-   - 💼 **Placement Prep** (`/placement-prep`): Tier-1 company matching matrix (Google, Microsoft, Amazon, etc.), ATS keyword matcher, and timed mock test simulators.
-   - 👨‍🏫 **Faculty Hub** (`/faculty`): Student cohort directory, pending evidence verification queue (Approve / Reject), and study blueprint uploads.
-   - 🛡️ **Admin Console** (`/admin`): Department placement statistics, campus user role management, and new recruitment drive launcher.
-4. **Interactive AI Career Coach**:
-   - Persistent floating coach widget (`/api/chatbot`) providing real-time interview advice, ATS resume tips, and company preparation blueprints.
+A modern, intelligent, and scalable full-stack campus placement platform connecting **Students**, **Faculty Mentors**, and **Placement Administrators**. Designed to streamline the recruitment process, provide AI-driven career guidance, and manage academic evidence—all under one roof.
 
 ---
 
-## 🏃 Quick Start
+## 🛠️ Technology Stack
 
-Navigate to the `placement-next` directory and run:
+Built with a state-of-the-art modern web architecture to ensure performance, security, and scalability.
 
-```powershell
-cd placement-next
-npm run dev
-```
+- **Framework**: [Next.js (App Router)](https://nextjs.org/) - Leverages Server-Side Rendering (SSR) and powerful Route Handlers.
+- **Frontend & UI**: [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/) for fluid, responsive, and premium glassmorphism styling, and [Lucide React](https://lucide.dev/) for crisp iconography.
+- **Database & Authentication**: [Supabase](https://supabase.com/) - PostgreSQL database, native Authentication, and robust Row-Level Security (RLS).
+- **AI Integration**: [Google Generative AI (Gemini API)](https://ai.google.dev/) - Powers the intelligent Career Coach widget.
 
-Open **http://localhost:3000** in your browser.
+---
+
+## ✨ Full Feature Suite
+
+### 🎓 1. Student Portal (`/dashboard`)
+An empowering dashboard designed to make candidates placement-ready.
+- **Skill Benchmarking & GitHub Heatmap**: Real-time integration and visualization of coding consistency.
+- **Portfolio Evidence Submission**: Students can upload verified projects and certificates.
+- **Assessment Readiness Breakdown**: Track readiness across multiple domains before the actual placement drives.
+- **Resume ATS Scanner**: Built-in resume keyword matcher to ensure candidates pass the initial screening.
+
+### 🤖 2. Interactive AI Career Coach (`/api/chatbot`)
+Powered by Gemini API, this floating assistant provides round-the-clock guidance.
+- **Real-Time Interview Advice**: Get tailored tips based on job descriptions.
+- **ATS Resume Tips**: Suggestions to bypass Applicant Tracking Systems.
+- **Company Preparation Blueprints**: On-demand roadmaps for top-tier companies.
+
+### 📚 3. Learning Academy & Placement Prep (`/learning` & `/placement-prep`)
+A structured environment for continuous upskilling.
+- **Structured Curriculum**: Modules covering DSA, System Design, Aptitude, and Soft Skills.
+- **Interactive Quizzes**: Test knowledge with real-time feedback.
+- **Tier-1 Company Matching Matrix**: Match skillsets with expectations of Google, Microsoft, Amazon, etc.
+- **Timed Mock Test Simulators**: Experience the pressure of real placement assessments.
+
+### 👨‍🏫 4. Faculty Hub (`/faculty`)
+Tools for mentors to guide and verify student progress.
+- **Student Cohort Directory**: Monitor the performance of assigned student groups.
+- **Evidence Verification Queue**: Streamlined interface to Approve or Reject student submissions.
+- **Study Blueprint Uploads**: Seamlessly distribute study materials and resources to cohorts.
+
+### 🛡️ 5. Admin Console (`/admin`)
+Centralized control for placement administrators.
+- **Placement Directorate KPIs**: High-level statistics on campus placement performance.
+- **Campus User Role Management**: Govern access, roles, and security settings.
+- **Recruitment Drive Launcher**: Announce and manage new company visits effortlessly.
 
 ---
 
 ## 🔑 Portal Access Credentials
 
-| Role | Username / Identifier | Password | Access Area |
+Experience the platform from different perspectives using standard test credentials:
+
+| Role | Username / Identifier | Password | Main Capabilities |
 | :--- | :--- | :--- | :--- |
-| **Master Admin** | `admin` (or `admin@portal.com`) | `admin@123` | Placement Directorate KPIs, Drive Publishing, Role Governance, Security Settings |
-| **Faculty Mentor** | `faculty@portal.com` | `faculty123` | Evidence Verification Queue (Approve/Reject student submissions), Study Materials |
-| **Student Candidate**| `student@portal.com` | `student123` | Skill Benchmarking, Real-time GitHub Heatmap, Portfolio Evidence Submission |
+| **Master Admin** | `admin` (or `admin@portal.com`) | `admin@123` | Placement KPIs, Drive Publishing, Role Governance |
+| **Faculty Mentor** | `faculty@portal.com` | `faculty123` | Evidence Verification, Study Materials Management |
+| **Student Candidate**| `student@portal.com` | `student123` | Skill Benchmarking, Evidence Submission, AI Coach |
 
-Master Admin can now log in using admin (or admin@portal.com) with admin@123 via native Supabase Auth.
-
-*Tip: You can change the Master Admin credentials anytime via the **Admin Security & Credentials** modal in the Admin Console.*
+*Tip: The Master Admin can update credentials anytime via the **Admin Security & Credentials** modal in the Admin Console.*
 
 ---
 
-## 🛡️ Supabase Row Level Security (RLS)
-The database schema with hardened Row-Level Security policies is defined in [`supabase_schema.sql`](supabase_schema.sql).
-To apply or verify RLS in your Supabase dashboard:
-1. Navigate to the **SQL Editor** in your Supabase Dashboard (`https://kemetwenttjawedzquqh.supabase.co`).
-2. Paste and run [`supabase_schema.sql`](supabase_schema.sql).
-3. All tables (`users`, `companies`, `projects`, `certificates`, `scores`, `study_materials`, `courses`) will have RLS enabled, restricting anonymous mutations and allowing only authorized roles (`FACULTY`, `ADMIN`) to modify sensitive records.
+## ⚙️ Quick Local Setup
+
+1. **Install dependencies**: `npm install`
+2. **Set up Environment Variables**: Configure `.env.local` with your Supabase keys and Gemini API key.
+3. **Run the development server**: 
+   ```bash
+   npm run dev
+   ```
+4. **Open Application**: Navigate to `http://localhost:3000`
+
+---
+
+## 🔒 Security & Database (Supabase RLS)
+The database schema includes hardened Row-Level Security policies defined in [`supabase_schema.sql`](supabase_schema.sql).
+All tables (`users`, `companies`, `projects`, `certificates`, `scores`, `study_materials`, `courses`) have RLS enabled, restricting anonymous mutations and allowing only authorized roles (`FACULTY`, `ADMIN`) to modify sensitive records.
